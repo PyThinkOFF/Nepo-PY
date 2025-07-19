@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .logo-container {
+      position: relative;
+      width: 300px;
+      height: 200px;
+    }
+
+    .logo-half {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+    }
+
+    .logo-left {
+      clip-path: inset(0 50% 0 0);
+      animation: slideLeft 2s forwards;
+    }
+
+    .logo-right {
+      clip-path: inset(0 0 0 50%);
+      animation: slideRight 2s forwards;
+    }
+
+    @keyframes slideLeft {
+      0% { transform: translateX(-100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideRight {
+      0% { transform: translateX(100%); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    .created-by {
+      margin-top: 30px;
+      font-size: 22px;
+      opacity: 0;
+      animation: fadeIn 2s 2.2s forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <img src="https://i.imgur.com/7Csyf21.jpg" class="logo-half logo-left">
+    <img src="https://i.imgur.com/7Csyf21.jpg" class="logo-half logo-right">
+  </div>
+  <div class="created-by">Created by Pycker Dadaa</div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = 'logo.html';
+    }, 8000); // redirect after 8s
+  </script>
+</body>
+</html>
