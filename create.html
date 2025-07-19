@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Account - Nepo Chat</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      width: 80%;
+      max-width: 300px;
+      background: #2a2a2a;
+      color: white;
+    }
+    button {
+      background: #00aaff;
+      cursor: pointer;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    #status {
+      margin-top: 20px;
+      color: lightgreen;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🆕 Create Account</h2>
+
+  <input type="text" id="signupName" placeholder="Full Name" />
+  <input type="email" id="signupEmail" placeholder="Email" />
+  <input type="password" id="signupPassword" placeholder="Password" />
+  <input type="file" id="profilePic" accept="image/*" />
+  <button id="signupBtn">Sign Up</button>
+  <p id="status"></p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+    const status = document.getElementById("status");
+
+    document.getElementById("signupBtn").onclick = async () => {
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value.trim();
+      const file = document.getElementById("profilePic").files[0];
+
+      if (!name || !email || !password) {
+        return status.textContent = "❌ Please fill all fields";
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+
+        let photoURL = "";
+        if (file) {
+          const fileRef = sRef(storage, `profile_pics/${uid}`);
+          await uploadBytes(fileRef, file);
+          photoURL = await getDownloadURL(fileRef);
+        }
+
+        await set(ref(db, "users/" + uid), {
+          displayName: name,
+          photoURL: photoURL,
+          role: "user"
+        });
+
+        localStorage.setItem("nepo_user_id", uid);
+        localStorage.setItem("nepo_profile_name", name);
+
+        status.textContent = `✅ User created for ${name}`;
+        setTimeout(() => window.location.href = "home.html", 1000);
+      } catch (err) {
+        console.error(err);
+        status.textContent = "❌ " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>
