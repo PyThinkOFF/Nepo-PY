@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nepo Chat - Home</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0e0e0e;
+      color: #fff;
+      display: flex;
+      flex-direction: row;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #1b1b1b;
+      border-right: 1px solid #333;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #00aaff;
+      object-fit: cover;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .username {
+      font-size: 20px;
+      font-weight: bold;
+      color: #00ccff;
+      text-align: center;
+      animation: fadeSlide 1s ease;
+    }
+
+    .userid {
+      font-size: 13px;
+      color: #aaa;
+      margin: 10px 0 30px;
+      text-align: center;
+    }
+
+    .menu {
+      width: 100%;
+    }
+
+    .menu button {
+      width: 100%;
+      background: #292929;
+      color: white;
+      border: none;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .menu button:hover {
+      background: #00aaff;
+    }
+
+    .chat-area {
+      flex: 1;
+      background: #121212;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      animation: fadeIn 1s ease;
+      text-align: center;
+    }
+
+    .chat-area h1 {
+      font-size: 32px;
+      color: #00aaff;
+      margin-bottom: 10px;
+    }
+
+    .chat-area p {
+      color: #ccc;
+      max-width: 400px;
+      font-size: 16px;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-around;
+        padding: 10px;
+        height: auto;
+      }
+
+      .menu {
+        flex-direction: row;
+        display: flex;
+        gap: 10px;
+      }
+
+      .menu button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      .chat-area {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <img id="avatar" class="profile-pic" alt="Profile Photo" />
+    <div id="username" class="username">Welcome!</div>
+    <div id="userid" class="userid">Your ID: #</div>
+
+    <div class="menu">
+      <button onclick="window.location.href='chat.html?room=dummy_room'">💬 Chat</button>
+      <button onclick="window.location.href='friend.html'">👥 Friends</button>
+      <button onclick="window.location.href='menu.html'">☰ Menu</button>
+    </div>
+  </div>
+
+  <div class="chat-area">
+    <h1>Nepo Chat</h1>
+    <p>This is your chat dashboard. Realtime messaging, friend list, and notifications will appear here.</p>
+  </div>
+
+  <script>
+    const name = localStorage.getItem("nepo_profile_name") || "User";
+    const img = localStorage.getItem("nepo_profile_pic");
+    let userId = localStorage.getItem("nepo_user_id");
+
+    if (!userId) {
+      userId = "ID-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+      localStorage.setItem("nepo_user_id", userId);
+    }
+
+    document.getElementById("username").textContent = `Welcome, ${name}`;
+    document.getElementById("userid").textContent = `Your ID: ${userId}`;
+
+    if (img) {
+      const avatar = document.getElementById("avatar");
+      avatar.src = img;
+      avatar.style.display = "block";
+    }
+  </script>
+
+</body>
+</html>
