@@ -1,39 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Private Chat - Nepo Chat</title>
+  <title>Nepo Chat – Messages</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #121212; color: white; font-family: sans-serif; }
-    body { display: flex; flex-direction: column; height: 100vh; }
-    main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    h2 { text-align: center; margin: 16px 0 4px; }
-    #userInfo { text-align: center; font-size: 0.85em; color: #aaa; margin-bottom: 8px; }
-    #messages { list-style: none; margin: 0; padding: 10px; overflow-y: auto; flex: 1; scroll-behavior: smooth; }
-    #messages li { margin: 10px 0; background: #1e1e1e; padding: 10px; border-radius: 6px; }
-    #controls { display: flex; gap: 5px; padding: 10px; background: #121212; border-top: 1px solid #333; position: sticky; bottom: 0; z-index: 10; }
-    #msgInput { flex: 1; background: #2a2a2a; color: white; border: none; border-radius: 6px; padding: 10px; font-size: 1em; }
-    button { background: #00aaff; color: white; border: none; border-radius: 6px; padding: 10px; font-size: 1em; cursor: pointer; }
-    button:hover { background: #008fcc; }
-    @media (max-width: 600px) { #controls { flex-wrap: wrap; } }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background: #1e1e1e;
+      color: white;
+    }
+    #chatHeader {
+      background: #00aaff;
+      padding: 10px;
+      font-size: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #callBtn {
+      background: #0088cc;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #incomingCallBox {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      border: 2px solid #00aaff;
+      padding: 15px;
+      border-radius: 10px;
+      z-index: 9999;
+    }
+    #incomingCallBox button {
+      margin: 5px;
+      padding: 8px 10px;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #acceptBtn { background: green; }
+    #rejectBtn { background: red; }
   </style>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
-  <main>
-    <h2>🔒 Private Chat</h2>
-    <div id="userInfo">Loading user info...</div>
-    <ul id="messages"></ul>
-    <div id="controls">
-      <input id="msgInput" placeholder="Type your message..." />
-      <button id="sendBtn">Send</button>
-    </div>
-  </main>
+
+  <div id="chatHeader">
+    <div>👤 <span id="friendName">Friend</span></div>
+    <button id="callBtn">📞 Call</button>
+  </div>
+
+  <!-- Your chat messages and UI go here -->
+
+  <!-- Incoming Call Box -->
+  <div id="incomingCallBox">
+    <p>📞 Incoming Call...</p>
+    <button id="acceptBtn" onclick="acceptCall()">Accept</button>
+    <button id="rejectBtn" onclick="rejectCall()">Reject</button>
+  </div>
+
+  <audio id="ringtone" loop>
+    <source src="https://actions.google.com/sounds/v1/alarms/phone_alerts_and_rings.ogg" type="audio/ogg">
+  </audio>
 
   <script>
+    // ✅ Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
       authDomain: "nepo-chat.firebaseapp.com",
@@ -45,47 +86,42 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.database();
 
-    const room = new URLSearchParams(window.location.search).get('room');
-    const name = localStorage.getItem("nepo_profile_name") || "User";
-    const messagesEl = document.getElementById("messages");
-    const userInfo = document.getElementById("userInfo");
+    // 🧠 Simulate current friend ID or room ID (replace this with your dynamic system)
+    const currentRoomId = "room123";
 
-    // Show user info
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        userInfo.textContent = `👤 ${name} | UID: ${user.uid}`;
-      } else {
-        userInfo.textContent = "❌ User not logged in.";
+    // 🔔 Ringtone + Popup Elements
+    const ringtone = document.getElementById("ringtone");
+    const incomingBox = document.getElementById("incomingCallBox");
+
+    // 📞 Call Button
+    document.getElementById("callBtn").addEventListener("click", () => {
+      window.location.href = `call.html?room=${currentRoomId}`;
+    });
+
+    // 🔁 Detect incoming call (when offer appears)
+    db.ref(`calls/${currentRoomId}/offer`).on("value", snap => {
+      if (snap.exists()) {
+        incomingBox.style.display = "block";
+        ringtone.play().catch(e => {});
       }
     });
 
-    // Listen for messages
-    db.ref(`chats/${room}`).on("child_added", snapshot => {
-      const msg = snapshot.val();
-      const li = document.createElement("li");
-      li.textContent = `${msg.sender}: ${msg.text}`;
-      messagesEl.appendChild(li);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    });
+    function acceptCall() {
+      ringtone.pause();
+      ringtone.currentTime = 0;
+      incomingBox.style.display = "none";
+      window.location.href = `call.html?room=${currentRoomId}`;
+    }
 
-    // Send message
-    document.getElementById("sendBtn").onclick = () => {
-      const input = document.getElementById("msgInput");
-      const text = input.value.trim();
-      if (text) {
-        const msg = {
-          sender: name,
-          text: text,
-          time: Date.now()
-        };
-        db.ref(`chats/${room}`).push(msg);
-        input.value = "";
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-    };
+    function rejectCall() {
+      ringtone.pause();
+      ringtone.currentTime = 0;
+      incomingBox.style.display = "none";
+      firebase.database().ref(`calls/${currentRoomId}`).remove();
+    }
   </script>
+
 </body>
 </html>
