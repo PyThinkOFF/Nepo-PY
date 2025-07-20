@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nepo Chat – Call</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: sans-serif;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    video {
+      width: 90%;
+      max-width: 400px;
+      margin: 10px;
+      border: 3px solid #00aaff;
+      border-radius: 10px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h2>📞 Nepo Chat Call</h2>
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+  <div>
+    <button onclick="startCall()">Start Call</button>
+    <button onclick="answerCall()">Answer Call</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const roomId = "room123"; // match your Firebase path
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
+
+    let localStream;
+    let peer;
+
+    async function setupMedia() {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+    }
+
+    function createPeerConnection(role) {
+      peer = new RTCPeerConnection();
+
+      localStream.getTracks().forEach(track => {
+        peer.addTrack(track, localStream);
+      });
+
+      peer.ontrack = e => {
+        remoteVideo.srcObject = e.streams[0];
+      };
+
+      peer.onicecandidate = e => {
+        if (e.candidate) {
+          db.ref(`calls/${roomId}/candidates/${role}`).push(e.candidate.toJSON());
+        }
+      };
+    }
+
+    async function startCall() {
+      await setupMedia();
+      createPeerConnection("caller");
+
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      await db.ref(`calls/${roomId}/offer`).set(offer);
+
+      // Wait for answer
+      db.ref(`calls/${roomId}/answer`).on("value", snap => {
+        const answer = snap.val();
+        if (answer && !peer.currentRemoteDescription) {
+          peer.setRemoteDescription(new RTCSessionDescription(answer));
+        }
+      });
+
+      // Get callee ICE candidates
+      db.ref(`calls/${roomId}/candidates/callee`).on("child_added", snap => {
+        const cand = new RTCIceCandidate(snap.val());
+        peer.addIceCandidate(cand);
+      });
+    }
+
+    async function answerCall() {
+      await setupMedia();
+      createPeerConnection("callee");
+
+      const offerSnap = await db.ref(`calls/${roomId}/offer`).once("value");
+      const offer = offerSnap.val();
+      await peer.setRemoteDescription(new RTCSessionDescription(offer));
+
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      await db.ref(`calls/${roomId}/answer`).set(answer);
+
+      // Caller ICE
+      db.ref(`calls/${roomId}/candidates/caller`).on("child_added", snap => {
+        const cand = new RTCIceCandidate(snap.val());
+        peer.addIceCandidate(cand);
+      });
+
+      // Callee ICE
+      db.ref(`calls/${roomId}/candidates/callee`).on("child_added", snap => {
+        // already handled in onicecandidate
+      });
+    }
+  </script>
+</body>
+</html>
