@@ -50,6 +50,7 @@
       flex-direction: column;
       text-align: center;
       padding: 20px;
+      z-index: 9999;
     }
     #suspendModal button {
       margin: 10px;
@@ -88,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Firebase Modular SDK (v12) -->
+  <!-- Firebase Modular SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -123,6 +124,16 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const uid = userCredential.user.uid;
 
+        // ✅ Check if banned in Realtime Database
+        const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
+        if (bannedSnap.exists()) {
+          document.getElementById("suspendMessage").textContent =
+            `❌ Your ID "${email}" has been banned by moderators.`;
+          document.getElementById("suspendModal").style.display = "flex";
+          return;
+        }
+
+        // ✅ Load user data if not banned
         const snap = await get(ref(db, "users/" + uid));
         const userData = snap.val();
 
@@ -134,7 +145,7 @@
       } catch (err) {
         if (err.code === "auth/user-disabled") {
           document.getElementById("suspendMessage").textContent =
-            `Your ID "${email}" has been suspended due to breaking rules or other reasons.`;
+            `❌ Your ID "${email}" has been suspended by the PySecurity Team.`;
           document.getElementById("suspendModal").style.display = "flex";
         } else {
           status.textContent = "❌ " + err.message;
@@ -147,7 +158,7 @@
     };
 
     document.getElementById("okBtn").onclick = () => {
-      window.location.href = "signin.html";
+      document.getElementById("suspendModal").style.display = "none";
     };
 
     document.getElementById("helpBtn").onclick = () => {
