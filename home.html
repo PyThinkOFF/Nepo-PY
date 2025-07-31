@@ -89,36 +89,25 @@
       text-align: center;
     }
 
-    .chat-area h1 {
-      font-size: 32px;
-      color: #00aaff;
-      margin-bottom: 10px;
-    }
-
-    .chat-area p {
-      color: #ccc;
-      max-width: 400px;
-      font-size: 16px;
+    .chat-area button {
+      margin: 20px;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 8px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
 
     @keyframes fadeSlide {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
 
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     @media (max-width: 768px) {
@@ -159,15 +148,13 @@
     <div id="userid" class="userid">Your ID: #</div>
 
     <div class="menu">
-      <button onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
-      <button onclick="window.location.href='friend.html'">👥 Friends</button>
       <button onclick="window.location.href='menu.html'">☰ Menu</button>
     </div>
   </div>
 
   <div class="chat-area">
-    <h1>Nepo Chat</h1>
-    <p>This is your chat dashboard. Realtime messaging, friend list, and notifications will appear here.</p>
+    <button onclick="window.location.href='friend.html'">👥 Friends</button>
+    <button onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
   </div>
 
   <script>
