@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Events - Nepo Chat</title>
+  <style>
+    body {
+      background: #0e0e0e;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #00ccff;
+      text-shadow: 0 0 8px #00ccff;
+    }
+    .event {
+      background: #1c1c1c;
+      padding: 20px;
+      margin: 10px;
+      border-radius: 10px;
+      width: 280px;
+      text-align: center;
+      box-shadow: 0 0 6px #00aaff33;
+    }
+    .event button {
+      margin: 10px 5px 0;
+      padding: 10px 20px;
+      border: none;
+      background: #00aaff;
+      color: white;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .event button:hover {
+      background: #008ecc;
+    }
+    .event button:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🎯 Nepo Chat Events</h2>
+
+  <div class="event">
+    <h3>🎉 Super Emoji</h3>
+    <p>Cost: ₦20</p>
+    <button onclick="purchaseEvent('super_emoji', 20)">Purchase</button>
+    <button id="use_super_emoji" onclick="useEvent('super_emoji', 20)" disabled>Use</button>
+  </div>
+
+  <div class="event">
+    <h3>🚪 Premium Room</h3>
+    <p>Cost: ₦100</p>
+    <button onclick="purchaseEvent('premium_room', 100)">Purchase</button>
+    <button id="use_premium_room" onclick="useEvent('premium_room', 100)" disabled>Use</button>
+  </div>
+
+  <div class="event">
+    <h3>💎 Sticker Pack</h3>
+    <p>Cost: ₦50</p>
+    <button onclick="purchaseEvent('sticker_pack', 50)">Purchase</button>
+    <button id="use_sticker_pack" onclick="useEvent('sticker_pack', 50)" disabled>Use</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f",
+      measurementId: "G-V22RDC8S2Z"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const userId = localStorage.getItem("nepo_user_id");
+
+    if (!userId) {
+      alert("Please login first.");
+      window.location.href = "signin.html";
+    }
+
+    // Purchase event
+    window.purchaseEvent = async (eventKey, cost) => {
+      const eventRef = ref(db, `users/${userId}/events/${eventKey}`);
+      await set(eventRef, { purchased: true });
+      const useBtn = document.getElementById(`use_${eventKey}`);
+      if (useBtn) useBtn.disabled = false;
+      alert(`✅ Event "${eventKey}" purchased. Now click Use.`);
+    };
+
+    // Use event (deduct balance)
+    window.useEvent = async (eventKey, cost) => {
+      const balanceRef = ref(db, `users/${userId}/balance`);
+
+      try {
+        await runTransaction(balanceRef, (balance) => {
+          if ((balance || 0) >= cost) {
+            return balance - cost;
+          } else {
+            alert("❌ Not enough balance.");
+            throw new Error("Insufficient balance");
+          }
+        });
+
+        alert(`✅ ₦${cost} deducted. Event "${eventKey}" used.`);
+        await set(ref(db, `users/${userId}/events/${eventKey}`), null);
+        const useBtn = document.getElementById(`use_${eventKey}`);
+        if (useBtn) useBtn.disabled = true;
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    // Enable use buttons if already purchased
+    const eventsRef = ref(db, `users/${userId}/events`);
+    onValue(eventsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      for (let key in data) {
+        if (data[key]?.purchased) {
+          const btn = document.getElementById(`use_${key}`);
+          if (btn) btn.disabled = false;
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
