@@ -1,147 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Events - Nepo Chat</title>
-  <style>
-    body {
-      background: #0e0e0e;
-      color: white;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px;
-    }
-    h2 {
-      margin-bottom: 20px;
-      color: #00ccff;
-      text-shadow: 0 0 8px #00ccff;
-    }
-    .event {
-      background: #1c1c1c;
-      padding: 20px;
-      margin: 10px;
-      border-radius: 10px;
-      width: 280px;
-      text-align: center;
-      box-shadow: 0 0 6px #00aaff33;
-    }
-    .event button {
-      margin: 10px 5px 0;
-      padding: 10px 20px;
-      border: none;
-      background: #00aaff;
-      color: white;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .event button:hover {
-      background: #008ecc;
-    }
-    .event button:disabled {
-      background: #444;
-      cursor: not-allowed;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - Nepo Chat</title>
+    <style>
+        body {
+            background: #0e0e0e;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h2 {
+            color: #00ccff;
+            text-shadow: 0 0 8px #00ccff;
+        }
+        button {
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: none;
+            font-size: 18px;
+            width: 240px;
+            background: #00ccff;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #0099cc;
+        }
+    </style>
 </head>
 <body>
 
-  <h2>🎯 Nepo Chat Events</h2>
+    <h2>Exclusive Events</h2>
+    <p>Join special events for just ₦100</p>
 
-  <div class="event">
-    <h3>🎉 Super Emoji</h3>
-    <p>Cost: ₦20</p>
-    <button onclick="purchaseEvent('super_emoji', 20)">Purchase</button>
-    <button id="use_super_emoji" onclick="useEvent('super_emoji', 20)" disabled>Use</button>
-  </div>
+    <button id="buyEventBtn">Purchase Event Ticket</button>
 
-  <div class="event">
-    <h3>🚪 Premium Room</h3>
-    <p>Cost: ₦100</p>
-    <button onclick="purchaseEvent('premium_room', 100)">Purchase</button>
-    <button id="use_premium_room" onclick="useEvent('premium_room', 100)" disabled>Use</button>
-  </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
-  <div class="event">
-    <h3>💎 Sticker Pack</h3>
-    <p>Cost: ₦50</p>
-    <button onclick="purchaseEvent('sticker_pack', 50)">Purchase</button>
-    <button id="use_sticker_pack" onclick="useEvent('sticker_pack', 50)" disabled>Use</button>
-  </div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+            authDomain: "nepo-chat.firebaseapp.com",
+            databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+            projectId: "nepo-chat",
+            storageBucket: "nepo-chat.appspot.com",
+            messagingSenderId: "75918244734",
+            appId: "1:75918244734:web:33762641fba78c03a3912f",
+            measurementId: "G-V22RDC8S2Z"
+        };
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
-      authDomain: "nepo-chat.firebaseapp.com",
-      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
-      projectId: "nepo-chat",
-      storageBucket: "nepo-chat.appspot.com",
-      messagingSenderId: "75918244734",
-      appId: "1:75918244734:web:33762641fba78c03a3912f",
-      measurementId: "G-V22RDC8S2Z"
-    };
+        const EVENT_COST = 100;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const userId = localStorage.getItem("nepo_user_id");
+        document.getElementById("buyEventBtn").addEventListener("click", () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const balanceRef = ref(db, "users/" + user.uid + "/balance");
 
-    if (!userId) {
-      alert("Please login first.");
-      window.location.href = "signin.html";
-    }
+                    get(balanceRef).then(snapshot => {
+                        let currentBalance = snapshot.val() || 0;
 
-    // Purchase event
-    window.purchaseEvent = async (eventKey, cost) => {
-      const eventRef = ref(db, `users/${userId}/events/${eventKey}`);
-      await set(eventRef, { purchased: true });
-      const useBtn = document.getElementById(`use_${eventKey}`);
-      if (useBtn) useBtn.disabled = false;
-      alert(`✅ Event "${eventKey}" purchased. Now click Use.`);
-    };
+                        if (currentBalance >= EVENT_COST) {
+                            set(balanceRef, currentBalance - EVENT_COST)
+                                .then(() => {
+                                    alert(`✅ Event ticket purchased! ₦${EVENT_COST} deducted.`);
+                                })
+                                .catch(err => {
+                                    alert("❌ Error deducting balance: " + err.message);
+                                });
+                        } else {
+                            alert(`❌ Not enough balance! You need ₦${EVENT_COST}, but only have ₦${currentBalance}`);
+                        }
+                    }).catch(err => {
+                        alert("❌ Error reading balance: " + err.message);
+                    });
 
-    // Use event (deduct balance)
-    window.useEvent = async (eventKey, cost) => {
-      const balanceRef = ref(db, `users/${userId}/balance`);
-
-      try {
-        await runTransaction(balanceRef, (balance) => {
-          if ((balance || 0) >= cost) {
-            return balance - cost;
-          } else {
-            alert("❌ Not enough balance.");
-            throw new Error("Insufficient balance");
-          }
+                } else {
+                    alert("⚠ Please log in first.");
+                    window.location.href = "signin.html";
+                }
+            });
         });
-
-        alert(`✅ ₦${cost} deducted. Event "${eventKey}" used.`);
-        await set(ref(db, `users/${userId}/events/${eventKey}`), null);
-        const useBtn = document.getElementById(`use_${eventKey}`);
-        if (useBtn) useBtn.disabled = true;
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    // Enable use buttons if already purchased
-    const eventsRef = ref(db, `users/${userId}/events`);
-    onValue(eventsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      for (let key in data) {
-        if (data[key]?.purchased) {
-          const btn = document.getElementById(`use_${key}`);
-          if (btn) btn.disabled = false;
-        }
-      }
-    });
-  </script>
+    </script>
 
 </body>
 </html>
