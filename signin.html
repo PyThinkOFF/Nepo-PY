@@ -50,7 +50,6 @@
       flex-direction: column;
       text-align: center;
       padding: 20px;
-      z-index: 9999;
     }
     #suspendModal button {
       margin: 10px;
@@ -89,10 +88,10 @@
     </div>
   </div>
 
-  <!-- Firebase Modular SDK -->
+  <!-- Firebase Modular SDK (v12) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -111,6 +110,27 @@
     const db = getDatabase(app);
     const status = document.getElementById("status");
 
+    // ✅ Auto-login if already authenticated
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const uid = user.uid;
+        const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
+        if (bannedSnap.exists()) {
+          document.getElementById("suspendMessage").textContent =
+            `❌ Your ID "${user.email}" has been banned by moderators.`;
+          document.getElementById("suspendModal").style.display = "flex";
+          return;
+        }
+
+        localStorage.setItem("nepo_user_id", uid);
+        const snap = await get(ref(db, "users/" + uid));
+        const userData = snap.val();
+        localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
+
+        window.location.href = "home.html"; // Skip login page
+      }
+    });
+
     document.getElementById("loginBtn").onclick = async () => {
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value.trim();
@@ -124,7 +144,6 @@
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const uid = userCredential.user.uid;
 
-        // ✅ Check if banned in Realtime Database
         const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
         if (bannedSnap.exists()) {
           document.getElementById("suspendMessage").textContent =
@@ -133,10 +152,8 @@
           return;
         }
 
-        // ✅ Load user data if not banned
         const snap = await get(ref(db, "users/" + uid));
         const userData = snap.val();
-
         localStorage.setItem("nepo_user_id", uid);
         localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
 
@@ -158,7 +175,7 @@
     };
 
     document.getElementById("okBtn").onclick = () => {
-      document.getElementById("suspendModal").style.display = "none";
+      window.location.href = "signin.html";
     };
 
     document.getElementById("helpBtn").onclick = () => {
