@@ -58,6 +58,9 @@
       text-align: center;
       animation: fadeSlide 1s ease;
       margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .userid {
@@ -139,6 +142,56 @@
       }
     }
 
+    /* Verified Badge Styles */
+    .verified-badge-danger {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #D32F2F; /* red */
+      box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
+      margin-left: 8px;
+    }
+
+    .verified-badge-danger svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* The white shining diagonal line */
+    .shine {
+      position: absolute;
+      top: -150%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 70%
+      );
+      transform: rotate(25deg);
+      animation: shineMove 2.5s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    @keyframes shineMove {
+      0% {
+        transform: translateX(-100%) rotate(25deg);
+      }
+      100% {
+        transform: translateX(100%) rotate(25deg);
+      }
+    }
+
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -192,7 +245,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
@@ -217,7 +270,27 @@
       window.location.href = "signin.html";
     }
 
-    document.getElementById("username").textContent = `Welcome, ${name}`;
+    const usernameEl = document.getElementById("username");
+    usernameEl.textContent = `Welcome, ${name}`;
+
+    // Verified badge check
+    const verifiedRef = ref(db, `verifiedUsers/${userId}`);
+    get(verifiedRef).then(snapshot => {
+      if (snapshot.exists() && snapshot.val() === true) {
+        const badge = document.createElement("span");
+        badge.classList.add("verified-badge-danger");
+        badge.title = "Verified (Danger)";
+        badge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; vertical-align:middle;">
+            <circle cx="12" cy="12" r="12" fill="none" />
+            <path d="M7.5 12.5L10 15L16.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="shine"></span>
+        `;
+        usernameEl.appendChild(badge);
+      }
+    }).catch(console.error);
+
     document.getElementById("userid").textContent = `Your ID: ${userId}`;
 
     if (img) {
