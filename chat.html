@@ -26,6 +26,46 @@
       width: 100%;
       background: black;
     }
+
+    /* Incoming call popup styles */
+    #incomingCallPopup {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #222;
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #00aaffaa;
+      padding: 15px 20px;
+      z-index: 9999;
+      display: none;
+      width: 280px;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    #incomingCallPopup p {
+      margin: 0 0 12px;
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+    #incomingCallPopup button {
+      margin: 0 8px;
+      width: 100px;
+      font-size: 1em;
+      border-radius: 6px;
+      padding: 8px;
+    }
+    #acceptCallBtn {
+      background-color: #4caf50;
+      border: none;
+      color: white;
+    }
+    #rejectCallBtn {
+      background-color: #f44336;
+      border: none;
+      color: white;
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -45,6 +85,13 @@
   </main>
 
   <div id="callContainer"></div>
+
+  <!-- Incoming call popup -->
+  <div id="incomingCallPopup">
+    <p id="incomingCallerName">Incoming call...</p>
+    <button id="acceptCallBtn">Accept</button>
+    <button id="rejectCallBtn">Reject</button>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -83,6 +130,7 @@
     auth.onAuthStateChanged(user => {
       if (user) {
         userInfo.textContent = `👤 ${name} | UID: ${user.uid}`;
+        setupIncomingCallListener(user.uid);
       } else {
         userInfo.textContent = "❌ User not logged in.";
       }
@@ -109,6 +157,112 @@
         input.value = "";
         messagesEl.scrollTop = messagesEl.scrollHeight;
       }
+    };
+
+    // --------- Ringtone + Incoming Call System ---------
+
+    // Simple beep ringtone using Web Audio API (looped)
+    class BeepRingtone {
+      constructor() {
+        this.context = new (window.AudioContext || window.webkitAudioContext)();
+        this.oscillator = null;
+        this.gainNode = null;
+      }
+      play() {
+        if (this.oscillator) return; // already playing
+        this.oscillator = this.context.createOscillator();
+        this.gainNode = this.context.createGain();
+        this.oscillator.type = 'sine';
+        this.oscillator.frequency.setValueAtTime(440, this.context.currentTime); // A4 note
+        this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
+
+        this.oscillator.connect(this.gainNode);
+        this.gainNode.connect(this.context.destination);
+
+        this.oscillator.start();
+
+        // Beep pattern: beep 500ms, silent 500ms (repeat)
+        const now = this.context.currentTime;
+        this.gainNode.gain.setValueAtTime(1, now);
+        this.gainNode.gain.setValueAtTime(1, now + 0.5);
+        this.gainNode.gain.linearRampToValueAtTime(0, now + 0.55);
+        this.gainNode.gain.setValueAtTime(0, now + 1);
+        // Loop the beep every 1 second
+        this.intervalId = setInterval(() => {
+          const t = this.context.currentTime;
+          this.gainNode.gain.cancelScheduledValues(t);
+          this.gainNode.gain.setValueAtTime(1, t);
+          this.gainNode.gain.setValueAtTime(1, t + 0.5);
+          this.gainNode.gain.linearRampToValueAtTime(0, t + 0.55);
+          this.gainNode.gain.setValueAtTime(0, t + 1);
+        }, 1000);
+      }
+      stop() {
+        if (!this.oscillator) return;
+        clearInterval(this.intervalId);
+        this.oscillator.stop();
+        this.oscillator.disconnect();
+        this.gainNode.disconnect();
+        this.oscillator = null;
+        this.gainNode = null;
+      }
+    }
+
+    const ringtone = new BeepRingtone();
+
+    const incomingCallPopup = document.getElementById("incomingCallPopup");
+    const incomingCallerName = document.getElementById("incomingCallerName");
+    const acceptCallBtn = document.getElementById("acceptCallBtn");
+    const rejectCallBtn = document.getElementById("rejectCallBtn");
+
+    let currentCallData = null;
+    let jitsiApi = null;
+
+    function setupIncomingCallListener(currentUserId) {
+      const callRef = db.ref(`calls/${currentUserId}`);
+
+      callRef.on('value', snapshot => {
+        const callData = snapshot.val();
+
+        if (callData && callData.status === "incoming") {
+          currentCallData = callData;
+          incomingCallerName.textContent = `Incoming call from ${callData.callerName || "Unknown"}`;
+          incomingCallPopup.style.display = "block";
+          ringtone.play();
+        } else {
+          currentCallData = null;
+          incomingCallPopup.style.display = "none";
+          ringtone.stop();
+        }
+      });
+    }
+
+    acceptCallBtn.onclick = () => {
+      if (!currentCallData) return;
+      ringtone.stop();
+      incomingCallPopup.style.display = "none";
+
+      // Hide main UI and show call container
+      document.querySelector('main').style.display = 'none';
+      document.getElementById('callContainer').style.display = 'block';
+
+      // Mark call as accepted in Firebase
+      db.ref(`calls/${auth.currentUser.uid}`).update({ status: "accepted" });
+
+      // Start Jitsi call with caller
+      jitsiApi = new JitsiMeetExternalAPI("8x8.vc", {
+        roomName: `vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/${currentCallData.room}`,
+        parentNode: document.querySelector('#callContainer'),
+      });
+    };
+
+    rejectCallBtn.onclick = () => {
+      if (!currentCallData) return;
+      ringtone.stop();
+      incomingCallPopup.style.display = "none";
+
+      // Mark call as rejected in Firebase
+      db.ref(`calls/${auth.currentUser.uid}`).update({ status: "rejected" });
     };
   </script>
 </body>
