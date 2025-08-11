@@ -66,6 +66,52 @@
       border: none;
       color: white;
     }
+
+    /* Verified Badge Styles */
+    .verified-badge-danger {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #D32F2F; /* red */
+      box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
+      margin-left: 6px;
+    }
+    .verified-badge-danger svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .shine {
+      position: absolute;
+      top: -150%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        120deg,
+        rgba(255, 255, 255, 0) 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 70%
+      );
+      transform: rotate(25deg);
+      animation: shineMove 2.5s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+    @keyframes shineMove {
+      0% {
+        transform: translateX(-100%) rotate(25deg);
+      }
+      100% {
+        transform: translateX(100%) rotate(25deg);
+      }
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -136,10 +182,59 @@
       }
     });
 
-    db.ref(`chats/${room}`).on("child_added", snapshot => {
+    // Create verified badge element
+    function createVerifiedBadge() {
+      const badge = document.createElement("span");
+      badge.classList.add("verified-badge-danger");
+      badge.title = "Verified (Danger)";
+      badge.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px; vertical-align:middle;">
+          <circle cx="12" cy="12" r="12" fill="none" />
+          <path d="M7.5 12.5L10 15L16.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="shine"></span>
+      `;
+      return badge;
+    }
+
+    // Cache verified users to avoid repeated DB reads
+    const verifiedCache = {};
+
+    // Helper: Check if a user is verified (returns Promise<boolean>)
+    function isUserVerified(uid) {
+      if (verifiedCache[uid] !== undefined) {
+        return Promise.resolve(verifiedCache[uid]);
+      }
+      return db.ref(`verifiedUsers/${uid}`).get().then(snapshot => {
+        const verified = snapshot.exists() && snapshot.val() === true;
+        verifiedCache[uid] = verified;
+        return verified;
+      });
+    }
+
+    // Display messages with verified badge if applicable
+    db.ref(`chats/${room}`).on("child_added", async snapshot => {
       const msg = snapshot.val();
       const li = document.createElement("li");
-      li.textContent = `${msg.sender}: ${msg.text}`;
+
+      // Create sender name span
+      const senderSpan = document.createElement("strong");
+      senderSpan.textContent = msg.sender;
+
+      // Check verified status for sender
+      const senderUid = msg.senderUid || null; // assuming you store senderUid, else you need to add it when sending
+      if (senderUid) {
+        const verified = await isUserVerified(senderUid);
+        if (verified) {
+          const badge = createVerifiedBadge();
+          senderSpan.appendChild(badge);
+        }
+      }
+
+      // Compose message: sender + colon + text
+      li.appendChild(senderSpan);
+      li.appendChild(document.createTextNode(`: ${msg.text}`));
+
       messagesEl.appendChild(li);
       messagesEl.scrollTop = messagesEl.scrollHeight;
     });
@@ -148,8 +243,15 @@
       const input = document.getElementById("msgInput");
       const text = input.value.trim();
       if (text) {
+        const user = auth.currentUser;
+        if (!user) {
+          alert("You must be logged in to send messages.");
+          return;
+        }
+
         const msg = {
           sender: name,
+          senderUid: user.uid, // Store UID for badge check
           text: text,
           time: Date.now()
         };
@@ -160,6 +262,8 @@
     };
 
     // --------- Ringtone + Incoming Call System ---------
+
+    // ... (rest of your ringtone and call system code unchanged) ...
 
     // Simple beep ringtone using Web Audio API (looped)
     class BeepRingtone {
