@@ -20,10 +20,17 @@
       display: none;
     }
     @media (max-width: 600px) { #controls { flex-wrap: wrap; } }
+    #callContainer {
+      display: none;
+      height: 100%;
+      width: 100%;
+      background: black;
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://8x8.vc/vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/external_api.js" async></script>
 </head>
 <body>
   <main>
@@ -37,8 +44,9 @@
     </div>
   </main>
 
+  <div id="callContainer"></div>
+
   <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
       authDomain: "nepo-chat.firebaseapp.com",
@@ -52,7 +60,6 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // Get room and user info
     const room = new URLSearchParams(window.location.search).get('room') || "global";
     const isGlobal = room === "global";
     const messagesEl = document.getElementById("messages");
@@ -60,16 +67,19 @@
     const callBtn = document.getElementById("callBtn");
     const name = localStorage.getItem("nepo_profile_name") || "User";
 
-    // Show call button only in private chats
     if (!isGlobal) {
       callBtn.style.display = "inline-block";
     }
 
     callBtn.onclick = () => {
-      window.location.href = `call.html?room=${room}`;
+      document.querySelector('main').style.display = 'none';
+      document.getElementById('callContainer').style.display = 'block';
+      const api = new JitsiMeetExternalAPI("8x8.vc", {
+        roomName: `vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/${room}`,
+        parentNode: document.querySelector('#callContainer'),
+      });
     };
 
-    // Auth state
     auth.onAuthStateChanged(user => {
       if (user) {
         userInfo.textContent = `👤 ${name} | UID: ${user.uid}`;
@@ -78,7 +88,6 @@
       }
     });
 
-    // Listen for messages
     db.ref(`chats/${room}`).on("child_added", snapshot => {
       const msg = snapshot.val();
       const li = document.createElement("li");
@@ -87,7 +96,6 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     });
 
-    // Send message
     document.getElementById("sendBtn").onclick = () => {
       const input = document.getElementById("msgInput");
       const text = input.value.trim();
