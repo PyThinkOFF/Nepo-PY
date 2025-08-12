@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Login - Nepo Chat</title>
   <style>
     body {
@@ -110,24 +110,17 @@
     const db = getDatabase(app);
     const status = document.getElementById("status");
 
-    // ✅ Auto-login if already authenticated
+    // Force sign out any existing session on page load
+    auth.signOut().catch(() => {
+      // no user signed in yet - ignore errors
+    });
+
+    // Disable auto-login redirect by NOT redirecting here
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const uid = user.uid;
-        const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
-        if (bannedSnap.exists()) {
-          document.getElementById("suspendMessage").textContent =
-            `❌ Your ID "${user.email}" has been banned by moderators.`;
-          document.getElementById("suspendModal").style.display = "flex";
-          return;
-        }
-
-        localStorage.setItem("nepo_user_id", uid);
-        const snap = await get(ref(db, "users/" + uid));
-        const userData = snap.val();
-        localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
-
-        window.location.href = "home.html"; // Skip login page
+        status.textContent = `You are already signed in as ${user.email}. Please logout first to switch account.`;
+      } else {
+        status.textContent = "Please sign in to continue.";
       }
     });
 
@@ -175,7 +168,8 @@
     };
 
     document.getElementById("okBtn").onclick = () => {
-      window.location.href = "signin.html";
+      document.getElementById("suspendModal").style.display = "none";
+      // Optionally clear inputs or redirect to signin.html here
     };
 
     document.getElementById("helpBtn").onclick = () => {
