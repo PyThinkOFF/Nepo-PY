@@ -1,100 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Events - Nepo Chat</title>
-    <style>
-        body {
-            background: #0e0e0e;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        h2 {
-            color: #00ccff;
-            text-shadow: 0 0 8px #00ccff;
-        }
-        button {
-            padding: 14px;
-            margin: 10px 0;
-            border-radius: 6px;
-            border: none;
-            font-size: 18px;
-            width: 240px;
-            background: #00ccff;
-            color: white;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            font-weight: bold;
-        }
-        button:hover {
-            background: #0099cc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nepo Chat - Events</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0e0e0e;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 10px 0 20px;
+      color: #00ccff;
+    }
+
+    .balance {
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #00ffcc;
+    }
+
+    .username {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Pro Badge */
+    .pro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #d4af37, #ffdf80, #d4af37);
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(255, 223, 128, 0.7),
+                  inset 0 0 6px rgba(255, 255, 255, 0.4);
+    }
+    .pro-badge::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -150%;
+      width: 150%;
+      height: 100%;
+      background: linear-gradient(
+        120deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.6) 50%,
+        rgba(255,255,255,0) 100%
+      );
+      transform: skewX(-25deg);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine {
+      0% { left: -150%; }
+      100% { left: 150%; }
+    }
+
+    .buy-btn {
+      background: #d4af37;
+      color: #000;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 30px;
+      transition: background 0.3s;
+    }
+    .buy-btn:hover {
+      background: #b8860b;
+    }
+
+    .events {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .event {
+      background: #1b1b1b;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      transition: transform 0.2s;
+    }
+    .event:hover {
+      transform: translateY(-4px);
+    }
+    .event-title {
+      font-size: 18px;
+      margin-bottom: 6px;
+      color: #00aaff;
+    }
+    .event-date {
+      font-size: 14px;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+    .event-desc {
+      font-size: 15px;
+      color: #ddd;
+    }
+  </style>
 </head>
 <body>
+  <h1>🎉 Nepo Events</h1>
+  <div id="username" class="username">Loading...</div>
+  <div id="balance" class="balance">Balance: ₦0</div>
+  <button id="buyProBtn" class="buy-btn">Buy Pro Badge (₦700)</button>
 
-    <h2>Exclusive Events</h2>
-    <p>Join special events for just ₦100</p>
+  <div class="events">
+    <div class="event">
+      <div class="event-title">🔥 Summer Chat Fest</div>
+      <div class="event-date">Sept 5, 2025</div>
+      <div class="event-desc">Join exclusive chat rooms with surprise rewards and Pro-only perks.</div>
+    </div>
+    <div class="event">
+      <div class="event-title">💎 Pro-Only Raffle</div>
+      <div class="event-date">Sept 12, 2025</div>
+      <div class="event-desc">Win diamond top-ups and premium themes. (Pro badge required)</div>
+    </div>
+    <div class="event">
+      <div class="event-title">🎤 Community Voice Stage</div>
+      <div class="event-date">Sept 20, 2025</div>
+      <div class="event-desc">Open mic for Nepo users worldwide. Pro members get priority spots!</div>
+    </div>
+  </div>
 
-    <button id="buyEventBtn">Purchase Event Ticket</button>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f"
+    };
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
-            authDomain: "nepo-chat.firebaseapp.com",
-            databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
-            projectId: "nepo-chat",
-            storageBucket: "nepo-chat.appspot.com",
-            messagingSenderId: "75918244734",
-            appId: "1:75918244734:web:33762641fba78c03a3912f",
-            measurementId: "G-V22RDC8S2Z"
-        };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
+    const userId = localStorage.getItem("nepo_user_id");
+    const name = localStorage.getItem("nepo_profile_name") || "User";
 
-        const EVENT_COST = 100;
+    const usernameEl = document.getElementById("username");
+    const balanceEl = document.getElementById("balance");
+    const buyProBtn = document.getElementById("buyProBtn");
 
-        document.getElementById("buyEventBtn").addEventListener("click", () => {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    const balanceRef = ref(db, "users/" + user.uid + "/balance");
+    if (!userId) {
+      alert("Please login first.");
+      window.location.href = "signin.html";
+    }
 
-                    get(balanceRef).then(snapshot => {
-                        let currentBalance = snapshot.val() || 0;
+    // Username display
+    usernameEl.textContent = name;
 
-                        if (currentBalance >= EVENT_COST) {
-                            set(balanceRef, currentBalance - EVENT_COST)
-                                .then(() => {
-                                    alert(`✅ Event ticket purchased! ₦${EVENT_COST} deducted.`);
-                                })
-                                .catch(err => {
-                                    alert("❌ Error deducting balance: " + err.message);
-                                });
-                        } else {
-                            alert(`❌ Not enough balance! You need ₦${EVENT_COST}, but only have ₦${currentBalance}`);
-                        }
-                    }).catch(err => {
-                        alert("❌ Error reading balance: " + err.message);
-                    });
+    // Balance live
+    const balanceRef = ref(db, `users/${userId}/balance`);
+    onValue(balanceRef, snap => {
+      balanceEl.textContent = `Balance: ₦${snap.val() ?? 0}`;
+    });
 
-                } else {
-                    alert("⚠ Please log in first.");
-                    window.location.href = "signin.html";
-                }
-            });
+    // Pro badge status
+    const badgeRef = ref(db, `users/${userId}/proBadge`);
+    onValue(badgeRef, snap => {
+      if (snap.exists() && snap.val() === true) {
+        showProBadge();
+        buyProBtn.style.display = "none";
+      }
+    });
+
+    // Buy Pro
+    buyProBtn.onclick = async () => {
+      const balanceSnap = await get(balanceRef);
+      let balance = balanceSnap.val() ?? 0;
+
+      if (balance >= 700) {
+        await update(ref(db, `users/${userId}`), {
+          balance: balance - 700,
+          proBadge: true
         });
-    </script>
+        alert("🎉 Pro Badge purchased successfully!");
+      } else {
+        alert("❌ Not enough balance to buy Pro Badge.");
+      }
+    };
 
+    function showProBadge() {
+      const badge = document.createElement("span");
+      badge.className = "pro-badge";
+      badge.textContent = "PRO ₦700";
+      usernameEl.appendChild(badge);
+    }
+  </script>
 </body>
 </html>
