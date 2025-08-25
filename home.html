@@ -5,12 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nepo Chat - Home</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #0e0e0e;
@@ -19,7 +14,6 @@
       flex-direction: row;
       height: 100vh;
     }
-
     .sidebar {
       width: 280px;
       background: #1b1b1b;
@@ -29,7 +23,6 @@
       flex-direction: column;
       align-items: center;
     }
-
     .profile-pic {
       width: 100px;
       height: 100px;
@@ -39,7 +32,6 @@
       margin-bottom: 15px;
       display: none;
     }
-
     .balance {
       font-size: 18px;
       color: #00ffcc;
@@ -50,7 +42,6 @@
       text-align: center;
       animation: fadeSlide 1s ease;
     }
-
     .username {
       font-size: 20px;
       font-weight: bold;
@@ -61,22 +52,20 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 5px;
     }
-
     .userid {
       font-size: 13px;
       color: #aaa;
       margin: 10px 0 30px;
       text-align: center;
     }
-
     .menu {
       width: 100%;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-
     .menu button {
       width: 100%;
       background: #292929;
@@ -89,11 +78,7 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
-    .menu button:hover {
-      background: #00aaff;
-    }
-
+    .menu button:hover { background: #00aaff; }
     .chat-area {
       flex: 1;
       background: #121212;
@@ -105,7 +90,6 @@
       animation: fadeIn 1s ease;
       text-align: center;
     }
-
     .chat-area button {
       margin: 20px;
       padding: 15px 30px;
@@ -117,108 +101,66 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-
-    .chat-area button:hover {
-      background: #008fcc;
-    }
+    .chat-area button:hover { background: #008fcc; }
 
     @keyframes fadeSlide {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-
-    /* Verified Badge Styles */
+    /* 🔴 Verified Badge */
     .verified-badge-danger {
       position: relative;
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       display: inline-block;
       vertical-align: middle;
       border-radius: 50%;
       overflow: hidden;
-      background-color: #D32F2F; /* red */
+      background-color: #D32F2F;
       box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
-      margin-left: 8px;
     }
+    .verified-badge-danger svg { width: 100%; height: 100%; display: block; }
 
-    .verified-badge-danger svg {
-      width: 100%;
-      height: 100%;
-      display: block;
+    /* 🟡 Pro Badge */
+    .pro-badge {
       position: relative;
-      z-index: 1;
+      width: 22px;
+      height: 22px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #FFD700;
+      box-shadow: 0 0 10px #FFD700;
     }
+    .pro-badge svg { width: 100%; height: 100%; display: block; }
 
-    /* The white shining diagonal line */
+    /* Shine animation */
     .shine {
       position: absolute;
       top: -150%;
       left: -50%;
       width: 200%;
       height: 200%;
-      background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0) 30%,
-        rgba(255, 255, 255, 0.4) 50%,
-        rgba(255, 255, 255, 0) 70%
-      );
+      background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
       transform: rotate(25deg);
       animation: shineMove 2.5s linear infinite;
       pointer-events: none;
       z-index: 2;
     }
-
     @keyframes shineMove {
-      0% {
-        transform: translateX(-100%) rotate(25deg);
-      }
-      100% {
-        transform: translateX(100%) rotate(25deg);
-      }
+      0% { transform: translateX(-100%) rotate(25deg); }
+      100% { transform: translateX(100%) rotate(25deg); }
     }
 
     @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-        flex-direction: row;
-        justify-content: space-around;
-        padding: 10px;
-        height: auto;
-      }
-
-      .menu {
-        flex-direction: row;
-        display: flex;
-        gap: 10px;
-      }
-
-      .menu button {
-        font-size: 14px;
-        padding: 10px;
-      }
-
-      .chat-area {
-        padding: 20px;
-      }
+      body { flex-direction: column; }
+      .sidebar { width: 100%; flex-direction: row; justify-content: space-around; padding: 10px; height: auto; }
+      .menu { flex-direction: row; gap: 10px; }
+      .menu button { font-size: 14px; padding: 10px; }
+      .chat-area { padding: 20px; }
     }
   </style>
 </head>
@@ -231,6 +173,7 @@
     <div id="userid" class="userid">Your ID: #</div>
 
     <div class="menu">
+      <button onclick="window.location.href='option.html'">💰 Add Money</button>
       <button onclick="window.location.href='menu.html'">☰ Menu</button>
       <button id="logoutBtn">Logout</button>
     </div>
@@ -270,10 +213,11 @@
       window.location.href = "signin.html";
     }
 
+    // Show username
     const usernameEl = document.getElementById("username");
     usernameEl.textContent = `Welcome, ${name}`;
 
-    // Verified badge check
+    // ✅ Badge check
     const verifiedRef = ref(db, `verifiedUsers/${userId}`);
     get(verifiedRef).then(snapshot => {
       if (snapshot.exists() && snapshot.val() === true) {
@@ -281,7 +225,7 @@
         badge.classList.add("verified-badge-danger");
         badge.title = "Verified (Danger)";
         badge.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px; vertical-align:middle;">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="12" r="12" fill="none" />
             <path d="M7.5 12.5L10 15L16.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
@@ -289,7 +233,24 @@
         `;
         usernameEl.appendChild(badge);
       }
-    }).catch(console.error);
+    });
+
+    // ✅ Pro Badge check
+    const proBadgeRef = ref(db, `users/${userId}/proBadge`);
+    get(proBadgeRef).then(snapshot => {
+      if (snapshot.exists() && snapshot.val() === true) {
+        const proBadge = document.createElement("span");
+        proBadge.classList.add("pro-badge");
+        proBadge.title = "Pro Badge (₦700)";
+        proBadge.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L15 8H21L17 12L19 18L12 15L5 18L7 12L3 8H9L12 2Z"/>
+          </svg>
+          <span class="shine"></span>
+        `;
+        usernameEl.appendChild(proBadge);
+      }
+    });
 
     document.getElementById("userid").textContent = `Your ID: ${userId}`;
 
@@ -299,7 +260,7 @@
       avatar.style.display = "block";
     }
 
-    // Real-time balance listener
+    // Balance listener
     const balanceElem = document.getElementById("balance");
     const balanceRef = ref(db, `users/${userId}/balance`);
     onValue(balanceRef, snapshot => {
