@@ -1,373 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>Private Chat - Nepo Chat</title>
-  <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #121212; color: white; font-family: sans-serif; }
-    body { display: flex; flex-direction: column; height: 100vh; }
-    main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    h2 { text-align: center; margin: 16px 0 4px; }
-    #userInfo { text-align: center; font-size: 0.85em; color: #aaa; margin-bottom: 8px; }
-    #messages { list-style: none; margin: 0; padding: 10px; overflow-y: auto; flex: 1; scroll-behavior: smooth; }
-    #messages li { margin: 10px 0; background: #1e1e1e; padding: 10px; border-radius: 6px; }
-    #controls { display: flex; gap: 5px; padding: 10px; background: #121212; border-top: 1px solid #333; position: sticky; bottom: 0; z-index: 10; }
-    #msgInput { flex: 1; background: #2a2a2a; color: white; border: none; border-radius: 6px; padding: 10px; font-size: 1em; }
-    button { background: #00aaff; color: white; border: none; border-radius: 6px; padding: 10px; font-size: 1em; cursor: pointer; }
-    button:hover { background: #008fcc; }
-    #callBtn {
-      display: none;
-    }
-    @media (max-width: 600px) { #controls { flex-wrap: wrap; } }
-    #callContainer {
-      display: none;
-      height: 100%;
-      width: 100%;
-      background: black;
-    }
-
-    /* Incoming call popup styles */
-    #incomingCallPopup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #222;
-      color: white;
-      border-radius: 10px;
-      box-shadow: 0 0 15px #00aaffaa;
-      padding: 15px 20px;
-      z-index: 9999;
-      display: none;
-      width: 280px;
-      font-family: sans-serif;
-      text-align: center;
-    }
-    #incomingCallPopup p {
-      margin: 0 0 12px;
-      font-size: 1.1em;
-      font-weight: bold;
-    }
-    #incomingCallPopup button {
-      margin: 0 8px;
-      width: 100px;
-      font-size: 1em;
-      border-radius: 6px;
-      padding: 8px;
-    }
-    #acceptCallBtn {
-      background-color: #4caf50;
-      border: none;
-      color: white;
-    }
-    #rejectCallBtn {
-      background-color: #f44336;
-      border: none;
-      color: white;
-    }
-
-    /* Verified Badge Styles */
-    .verified-badge-danger {
-      position: relative;
-      width: 18px;
-      height: 18px;
-      display: inline-block;
-      vertical-align: middle;
-      border-radius: 50%;
-      overflow: hidden;
-      background-color: #D32F2F; /* red */
-      box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
-      margin-left: 6px;
-    }
-    .verified-badge-danger svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-      position: relative;
-      z-index: 1;
-    }
-    .shine {
-      position: absolute;
-      top: -150%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0) 30%,
-        rgba(255, 255, 255, 0.4) 50%,
-        rgba(255, 255, 255, 0) 70%
-      );
-      transform: rotate(25deg);
-      animation: shineMove 2.5s linear infinite;
-      pointer-events: none;
-      z-index: 2;
-    }
-    @keyframes shineMove {
-      0% {
-        transform: translateX(-100%) rotate(25deg);
-      }
-      100% {
-        transform: translateX(100%) rotate(25deg);
-      }
-    }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://8x8.vc/vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/external_api.js" async></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nepo Chat</title>
+<style>
+html, body {margin:0; padding:0; height:100%; background:#121212; color:white; font-family:sans-serif;}
+body {display:flex; flex-direction:column; height:100vh;}
+main {flex:1; display:flex; flex-direction:column; overflow:hidden;}
+h2 {text-align:center; margin:16px 0 4px;}
+#userInfo {text-align:center; font-size:0.85em; color:#aaa; margin-bottom:8px;}
+#messages {list-style:none; margin:0; padding:10px; overflow-y:auto; flex:1; scroll-behavior:smooth;}
+#messages li {margin:10px 0; background:#1e1e1e; padding:10px; border-radius:6px; position:relative;}
+.verified-badge {width:16px; height:16px; display:inline-block; vertical-align:middle; margin-left:6px; background:linear-gradient(45deg,#4caf50,#81c784); border-radius:50%;}
+#controls {display:flex; gap:5px; padding:10px; background:#121212; border-top:1px solid #333; position:sticky; bottom:0; z-index:10;}
+#msgInput {flex:1; background:#2a2a2a; color:white; border:none; border-radius:6px; padding:10px; font-size:1em;}
+button {background:#00aaff; color:white; border:none; border-radius:6px; padding:10px; font-size:1em; cursor:pointer;}
+button:hover {background:#008fcc;}
+#callBtn {display:none;}
+#callContainer {display:none; height:100%; width:100%; background:black;}
+#incomingCallPopup {position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#222; color:white; border-radius:10px; box-shadow:0 0 15px #00aaffaa; padding:15px 20px; z-index:9999; display:none; width:280px; font-family:sans-serif; text-align:center;}
+#incomingCallPopup p {margin:0 0 12px; font-size:1.1em; font-weight:bold;}
+#incomingCallPopup button {margin:0 8px; width:100px; font-size:1em; border-radius:6px; padding:8px;}
+#acceptCallBtn {background-color:#4caf50; border:none; color:white;}
+#rejectCallBtn {background-color:#f44336; border:none; color:white;}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+<script src="https://meet.jit.si/external_api.js"></script>
 </head>
 <body>
-  <main>
-    <h2>💬 Nepo Chat Room</h2>
-    <div id="userInfo">Loading user info...</div>
-    <ul id="messages"></ul>
-    <div id="controls">
-      <input id="msgInput" placeholder="Type your message..." />
-      <button id="sendBtn">Send</button>
-      <button id="callBtn">📞 Call</button>
-    </div>
-  </main>
+<main>
+<h2>💬 Nepo Chat Room</h2>
+<div id="userInfo">Loading user info...</div>
+<ul id="messages"></ul>
+<div id="controls">
+<input id="msgInput" placeholder="Type your message..." />
+<button id="sendBtn">Send</button>
+<button id="callBtn">📞 Call</button>
+</div>
+</main>
+<div id="callContainer"></div>
+<div id="incomingCallPopup">
+<p id="incomingCallerName">Incoming call...</p>
+<button id="acceptCallBtn">Accept</button>
+<button id="rejectCallBtn">Reject</button>
+</div>
 
-  <div id="callContainer"></div>
+<!-- Ringtone Audio -->
+<audio id="ringtone" preload="auto" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
 
-  <!-- Incoming call popup -->
-  <div id="incomingCallPopup">
-    <p id="incomingCallerName">Incoming call...</p>
-    <button id="acceptCallBtn">Accept</button>
-    <button id="rejectCallBtn">Reject</button>
-  </div>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+  authDomain: "nepo-chat.firebaseapp.com",
+  databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+  projectId: "nepo-chat",
+  storageBucket: "nepo-chat.appspot.com",
+  messagingSenderId: "75918244734",
+  appId: "1:75918244734:web:33762641fba78c03a3912f"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
-      authDomain: "nepo-chat.firebaseapp.com",
-      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
-      projectId: "nepo-chat",
-      storageBucket: "nepo-chat.appspot.com",
-      messagingSenderId: "75918244734",
-      appId: "1:75918244734:web:33762641fba78c03a3912f"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+const room = new URLSearchParams(window.location.search).get('room') || "global";
+const messagesEl = document.getElementById("messages");
+const userInfo = document.getElementById("userInfo");
+const callBtn = document.getElementById("callBtn");
+const callContainer = document.getElementById("callContainer");
+const incomingPopup = document.getElementById("incomingCallPopup");
+const incomingCallerName = document.getElementById("incomingCallerName");
+const acceptCallBtn = document.getElementById("acceptCallBtn");
+const rejectCallBtn = document.getElementById("rejectCallBtn");
+const ringtone = document.getElementById("ringtone");
+const name = localStorage.getItem("nepo_profile_name") || "User";
 
-    const room = new URLSearchParams(window.location.search).get('room') || "global";
-    const isGlobal = room === "global";
-    const messagesEl = document.getElementById("messages");
-    const userInfo = document.getElementById("userInfo");
-    const callBtn = document.getElementById("callBtn");
-    const name = localStorage.getItem("nepo_profile_name") || "User";
+callBtn.style.display = "inline-block";
+let jitsiApi = null;
+let currentCall = null;
+const callsRef = db.ref("calls");
 
-    if (!isGlobal) {
-      callBtn.style.display = "inline-block";
-    }
+// Unlock audio
+document.body.addEventListener("click", () => { ringtone.play().then(()=>{ringtone.pause(); ringtone.currentTime=0;}).catch(e=>console.log(e)); }, {once:true});
 
-    callBtn.onclick = () => {
-      document.querySelector('main').style.display = 'none';
-      document.getElementById('callContainer').style.display = 'block';
-      const api = new JitsiMeetExternalAPI("8x8.vc", {
-        roomName: `vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/${room}`,
-        parentNode: document.querySelector('#callContainer'),
-      });
-    };
+// Verified Badge
+const verifiedCache = {};
+async function isUserVerified(uid){
+  if(verifiedCache[uid]!==undefined) return verifiedCache[uid];
+  const snap = await db.ref(`verifiedUsers/${uid}`).get();
+  const verified = snap.exists() && snap.val()===true;
+  verifiedCache[uid]=verified;
+  return verified;
+}
+function createVerifiedBadge(){ const span=document.createElement("span"); span.className="verified-badge"; return span; }
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        userInfo.textContent = `👤 ${name} | UID: ${user.uid}`;
-        setupIncomingCallListener(user.uid);
-      } else {
-        userInfo.textContent = "❌ User not logged in.";
-      }
+// ---------------- Auth ----------------
+auth.onAuthStateChanged(user => {
+  if(!user){ userInfo.textContent="❌ User not logged in."; return;}
+  userInfo.textContent = `👤 ${name} | UID: ${user.uid}`;
+  setupIncomingCallListener(user.uid);
+});
+
+// ---------------- Messages ----------------
+db.ref(`chats/${room}`).on("child_added", async snapshot => {
+  const msg = snapshot.val();
+  const li = document.createElement("li");
+  li.textContent = `${msg.sender}: ${msg.text}`;
+  if(msg.senderUid){
+    if(await isUserVerified(msg.senderUid)) li.appendChild(createVerifiedBadge());
+  }
+  messagesEl.appendChild(li);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+});
+
+// ---------------- Send ----------------
+document.getElementById("sendBtn").onclick = ()=>{
+  const input=document.getElementById("msgInput");
+  const text=input.value.trim();
+  if(!text) return;
+  const user=auth.currentUser;
+  if(!user){ alert("Login required"); return;}
+  db.ref(`chats/${room}`).push({sender:name, senderUid:user.uid, text, time:Date.now()});
+  input.value="";
+  messagesEl.scrollTop=messagesEl.scrollHeight;
+}
+
+// ---------------- Call ----------------
+callBtn.onclick = async ()=>{
+  const user=auth.currentUser;
+  if(!user) return alert("Login required");
+  const uids = room.split("_");
+  const callee = uids[0]===user.uid?uids[1]:uids[0];
+  const callData = {caller:user.uid, callee:callee, status:"ringing", room:room, timestamp:Date.now()};
+  await callsRef.child(room).set(callData);
+  alert("📞 Call request sent!");
+  callsRef.child(room).on("value", snapshot=>{
+    const c=snapshot.val(); if(!c) return;
+    if(c.status==="accepted") startJitsi(room);
+    if(c.status==="rejected") alert("❌ Call rejected");
+  });
+}
+
+// ---------------- Incoming Call ----------------
+function setupIncomingCallListener(myUid){
+  callsRef.on("value", snapshot=>{
+    const data = snapshot.val(); if(!data) return;
+    Object.values(data).forEach(call=>{
+      if(call.callee===myUid && call.status==="ringing") showIncomingCallPopup(call);
     });
+  });
+}
 
-    // Create verified badge element
-    function createVerifiedBadge() {
-      const badge = document.createElement("span");
-      badge.classList.add("verified-badge-danger");
-      badge.title = "Verified (Danger)";
-      badge.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:18px; height:18px; vertical-align:middle;">
-          <circle cx="12" cy="12" r="12" fill="none" />
-          <path d="M7.5 12.5L10 15L16.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="shine"></span>
-      `;
-      return badge;
-    }
+function showIncomingCallPopup(call){
+  currentCall=call;
+  incomingPopup.style.display="block";
+  ringtone.currentTime=0;
+  ringtone.play().catch(e=>console.log("Ringtone blocked", e));
+  // Notification API
+  if(Notification.permission!=="granted") Notification.requestPermission();
+  else new Notification("Incoming call", {body:`Call from ${call.caller}`, icon:"https://www.gstatic.com/images/branding/product/1x/chat_48dp.png"});
 
-    // Cache verified users to avoid repeated DB reads
-    const verifiedCache = {};
+  db.ref(`users/${call.caller}/name`).get().then(snap=>incomingCallerName.textContent=`${snap.val()||"Unknown"} is calling...`);
 
-    // Helper: Check if a user is verified (returns Promise<boolean>)
-    function isUserVerified(uid) {
-      if (verifiedCache[uid] !== undefined) {
-        return Promise.resolve(verifiedCache[uid]);
-      }
-      return db.ref(`verifiedUsers/${uid}`).get().then(snapshot => {
-        const verified = snapshot.exists() && snapshot.val() === true;
-        verifiedCache[uid] = verified;
-        return verified;
-      });
-    }
+  acceptCallBtn.onclick=()=>{ stopRingtone(); acceptCall(call); incomingPopup.style.display="none"; };
+  rejectCallBtn.onclick=()=>{ stopRingtone(); rejectCall(call); incomingPopup.style.display="none"; };
+}
 
-    // Display messages with verified badge if applicable
-    db.ref(`chats/${room}`).on("child_added", async snapshot => {
-      const msg = snapshot.val();
-      const li = document.createElement("li");
+// ---------------- Ringtone ----------------
+function stopRingtone(){ ringtone.pause(); ringtone.currentTime=0; setTimeout(()=>{ ringtone.pause(); }, 60000); }
 
-      // Create sender name span
-      const senderSpan = document.createElement("strong");
-      senderSpan.textContent = msg.sender;
+// ---------------- Accept / Reject ----------------
+async function acceptCall(call){ await callsRef.child(call.room).update({status:"accepted"}); startJitsi(call.room); }
+async function rejectCall(call){ await callsRef.child(call.room).update({status:"rejected"}); }
 
-      // Check verified status for sender
-      const senderUid = msg.senderUid || null; // assuming you store senderUid, else you need to add it when sending
-      if (senderUid) {
-        const verified = await isUserVerified(senderUid);
-        if (verified) {
-          const badge = createVerifiedBadge();
-          senderSpan.appendChild(badge);
-        }
-      }
-
-      // Compose message: sender + colon + text
-      li.appendChild(senderSpan);
-      li.appendChild(document.createTextNode(`: ${msg.text}`));
-
-      messagesEl.appendChild(li);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    });
-
-    document.getElementById("sendBtn").onclick = () => {
-      const input = document.getElementById("msgInput");
-      const text = input.value.trim();
-      if (text) {
-        const user = auth.currentUser;
-        if (!user) {
-          alert("You must be logged in to send messages.");
-          return;
-        }
-
-        const msg = {
-          sender: name,
-          senderUid: user.uid, // Store UID for badge check
-          text: text,
-          time: Date.now()
-        };
-        db.ref(`chats/${room}`).push(msg);
-        input.value = "";
-        messagesEl.scrollTop = messagesEl.scrollHeight;
-      }
-    };
-
-    // --------- Ringtone + Incoming Call System ---------
-
-    // ... (rest of your ringtone and call system code unchanged) ...
-
-    // Simple beep ringtone using Web Audio API (looped)
-    class BeepRingtone {
-      constructor() {
-        this.context = new (window.AudioContext || window.webkitAudioContext)();
-        this.oscillator = null;
-        this.gainNode = null;
-      }
-      play() {
-        if (this.oscillator) return; // already playing
-        this.oscillator = this.context.createOscillator();
-        this.gainNode = this.context.createGain();
-        this.oscillator.type = 'sine';
-        this.oscillator.frequency.setValueAtTime(440, this.context.currentTime); // A4 note
-        this.gainNode.gain.setValueAtTime(0, this.context.currentTime);
-
-        this.oscillator.connect(this.gainNode);
-        this.gainNode.connect(this.context.destination);
-
-        this.oscillator.start();
-
-        // Beep pattern: beep 500ms, silent 500ms (repeat)
-        const now = this.context.currentTime;
-        this.gainNode.gain.setValueAtTime(1, now);
-        this.gainNode.gain.setValueAtTime(1, now + 0.5);
-        this.gainNode.gain.linearRampToValueAtTime(0, now + 0.55);
-        this.gainNode.gain.setValueAtTime(0, now + 1);
-        // Loop the beep every 1 second
-        this.intervalId = setInterval(() => {
-          const t = this.context.currentTime;
-          this.gainNode.gain.cancelScheduledValues(t);
-          this.gainNode.gain.setValueAtTime(1, t);
-          this.gainNode.gain.setValueAtTime(1, t + 0.5);
-          this.gainNode.gain.linearRampToValueAtTime(0, t + 0.55);
-          this.gainNode.gain.setValueAtTime(0, t + 1);
-        }, 1000);
-      }
-      stop() {
-        if (!this.oscillator) return;
-        clearInterval(this.intervalId);
-        this.oscillator.stop();
-        this.oscillator.disconnect();
-        this.gainNode.disconnect();
-        this.oscillator = null;
-        this.gainNode = null;
-      }
-    }
-
-    const ringtone = new BeepRingtone();
-
-    const incomingCallPopup = document.getElementById("incomingCallPopup");
-    const incomingCallerName = document.getElementById("incomingCallerName");
-    const acceptCallBtn = document.getElementById("acceptCallBtn");
-    const rejectCallBtn = document.getElementById("rejectCallBtn");
-
-    let currentCallData = null;
-    let jitsiApi = null;
-
-    function setupIncomingCallListener(currentUserId) {
-      const callRef = db.ref(`calls/${currentUserId}`);
-
-      callRef.on('value', snapshot => {
-        const callData = snapshot.val();
-
-        if (callData && callData.status === "incoming") {
-          currentCallData = callData;
-          incomingCallerName.textContent = `Incoming call from ${callData.callerName || "Unknown"}`;
-          incomingCallPopup.style.display = "block";
-          ringtone.play();
-        } else {
-          currentCallData = null;
-          incomingCallPopup.style.display = "none";
-          ringtone.stop();
-        }
-      });
-    }
-
-    acceptCallBtn.onclick = () => {
-      if (!currentCallData) return;
-      ringtone.stop();
-      incomingCallPopup.style.display = "none";
-
-      // Hide main UI and show call container
-      document.querySelector('main').style.display = 'none';
-      document.getElementById('callContainer').style.display = 'block';
-
-      // Mark call as accepted in Firebase
-      db.ref(`calls/${auth.currentUser.uid}`).update({ status: "accepted" });
-
-      // Start Jitsi call with caller
-      jitsiApi = new JitsiMeetExternalAPI("8x8.vc", {
-        roomName: `vpaas-magic-cookie-0d7edef4efc34b30827e3da828e39000/${currentCallData.room}`,
-        parentNode: document.querySelector('#callContainer'),
-      });
-    };
-
-    rejectCallBtn.onclick = () => {
-      if (!currentCallData) return;
-      ringtone.stop();
-      incomingCallPopup.style.display = "none";
-
-      // Mark call as rejected in Firebase
-      db.ref(`calls/${auth.currentUser.uid}`).update({ status: "rejected" });
-    };
-  </script>
+// ---------------- Start Jitsi ----------------
+function startJitsi(roomName){
+  document.querySelector('main').style.display='none';
+  callContainer.style.display='block';
+  jitsiApi = new JitsiMeetExternalAPI("meet.jit.si", {roomName:`nepochat-${roomName}`, parentNode:callContainer, width:'100%', height:'100%'});
+  jitsiApi.addEventListener('readyToClose', ()=>{
+    callContainer.style.display='none';
+    document.querySelector('main').style.display='flex';
+    callsRef.child(roomName).remove();
+  });
+}
+</script>
 </body>
 </html>
