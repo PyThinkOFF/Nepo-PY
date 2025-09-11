@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Friend Requests</title>
+  <style>
+    body { background:#121212; color:white; font-family:sans-serif; padding:20px;}
+    h2 { margin-bottom:10px; }
+    ul { list-style:none; padding:0; }
+    li {
+      background:#1e1e1e;
+      margin:8px 0;
+      padding:10px;
+      border-radius:6px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .user-info { display:flex; align-items:center; gap:6px; }
+    .verified-badge { width:18px; height:18px; background:#D32F2F; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 6px rgba(211,47,47,0.7);}
+    .verified-badge svg { width:12px; height:12px; }
+    button { padding:6px 10px; border:none; border-radius:6px; cursor:pointer; margin-left:5px; }
+    .accept { background:#00c853; color:white; }
+    .reject { background:#d32f2f; color:white; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <h2>📩 Incoming Friend Requests</h2>
+  <ul id="requestList"></ul>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
+      authDomain: "nepo-chat.firebaseapp.com",
+      databaseURL: "https://nepo-chat-default-rtdb.firebaseio.com",
+      projectId: "nepo-chat",
+      storageBucket: "nepo-chat.appspot.com",
+      messagingSenderId: "75918244734",
+      appId: "1:75918244734:web:33762641fba78c03a3912f"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    function createVerifiedBadge() {
+      const badge = document.createElement("span");
+      badge.classList.add("verified-badge");
+      badge.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>`;
+      return badge;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const friendUid = urlParams.get("uid");
+
+    auth.onAuthStateChanged(user => {
+      if (!user) return alert("⚠️ You must be logged in");
+
+      // If redirected with ?uid → send request
+      if (friendUid) {
+        db.ref(`friendRequests/${friendUid}`).push({
+          from: user.uid,
+          timestamp: Date.now()
+        }).then(() => {
+          alert("✅ Friend request sent!");
+          window.history.replaceState({}, document.title, "friendrequest.html"); // remove param
+        });
+      }
+
+      const requestList = document.getElementById("requestList");
+
+      // Load incoming requests
+      db.ref(`friendRequests/${user.uid}`).on("value", snapshot => {
+        requestList.innerHTML = "";
+        if (!snapshot.exists()) {
+          requestList.innerHTML = "<li>No pending requests.</li>";
+          return;
+        }
+
+        snapshot.forEach(child => {
+          const req = child.val();
+          const reqKey = child.key;
+
+          const li = document.createElement("li");
+          const userInfo = document.createElement("div");
+          userInfo.classList.add("user-info");
+
+          // Load sender info
+          db.ref(`users/${req.from}`).get().then(senderSnap => {
+            const senderName = senderSnap.exists() ? senderSnap.val().name : req.from;
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = senderName;
+            userInfo.appendChild(nameSpan);
+
+            // Show badge if verified
+            db.ref(`verifiedUsers/${req.from}`).get().then(verifiedSnap => {
+              if (verifiedSnap.exists() && verifiedSnap.val() === true) {
+                userInfo.appendChild(createVerifiedBadge());
+              }
+            });
+
+            li.appendChild(userInfo);
+          });
+
+          // Accept button
+          const acceptBtn = document.createElement("button");
+          acceptBtn.textContent = "Accept";
+          acceptBtn.classList.add("accept");
+          acceptBtn.onclick = () => {
+            acceptBtn.disabled = true;
+            rejectBtn.disabled = true;
+
+            Promise.all([
+              db.ref(`friends/${user.uid}/${req.from}`).set({ name: "Friend" }),
+              db.ref(`friends/${req.from}/${user.uid}`).set({ name: user.displayName || "Friend" }),
+              db.ref(`friendRequests/${user.uid}/${reqKey}`).remove()
+            ]).then(() => {
+              li.remove(); // remove from UI after success
+            }).catch(err => {
+              alert("❌ Error: " + err.message);
+              acceptBtn.disabled = false;
+              rejectBtn.disabled = false;
+            });
+          };
+
+          // Reject button
+          const rejectBtn = document.createElement("button");
+          rejectBtn.textContent = "Reject";
+          rejectBtn.classList.add("reject");
+          rejectBtn.onclick = () => {
+            acceptBtn.disabled = true;
+            rejectBtn.disabled = true;
+
+            db.ref(`friendRequests/${user.uid}/${reqKey}`).remove()
+              .then(() => {
+                li.remove(); // remove from UI after success
+              })
+              .catch(err => {
+                alert("❌ Error: " + err.message);
+                acceptBtn.disabled = false;
+                rejectBtn.disabled = false;
+              });
+          };
+
+          li.appendChild(acceptBtn);
+          li.appendChild(rejectBtn);
+          requestList.appendChild(li);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
