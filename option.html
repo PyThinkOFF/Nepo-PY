@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Money - Nepo Wallet</title>
+<style>
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0e0e0e;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+  }
+  h2 {
+    margin-bottom: 30px;
+    color: #00ffcc;
+  }
+  button {
+    background: linear-gradient(135deg,#00ffcc,#00cc99);
+    border: none;
+    color: black;
+    padding: 15px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px 0;
+    width: 200px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: linear-gradient(135deg,#33ffdd,#00cc99);
+  }
+</style>
+</head>
+<body>
+<h2>Add Money</h2>
+<button id="webBtn">Nepo Pay WEB</button>
+<button id="cardBtn">Nepo Pay CARD</button>
+
+<script>
+  document.getElementById("webBtn").onclick = () => window.location.href='https://pythinkoff.github.io/NepoUpdates/signin.html';
+  document.getElementById("cardBtn").onclick = () => window.location.href='nepocard.html';
+</script>
+</body>
+</html>
