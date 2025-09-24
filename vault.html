@@ -46,6 +46,7 @@
 
   <div id="rewardCard" class="card" style="display:none;">
     <div class="reward">Today’s Reward: ₦<span id="rewardAmount">0</span></div>
+    <div class="reward" id="tomorrowReward"></div>
     <button id="claimBtn">Claim</button>
   </div>
 
@@ -76,13 +77,14 @@
     const countdownEl = document.getElementById("countdown");
     const rewardCard = document.getElementById("rewardCard");
     const rewardAmountEl = document.getElementById("rewardAmount");
+    const tomorrowRewardEl = document.getElementById("tomorrowReward");
     const claimBtn = document.getElementById("claimBtn");
 
     async function loadVault() {
       const userSnap = await get(ref(db, `users/${userId}`));
       if (!userSnap.exists()) return;
-
       const data = userSnap.val();
+
       if (!data.proBadge) {
         statusEl.textContent = "No active Pro subscription";
         return;
@@ -90,15 +92,17 @@
 
       const now = Date.now();
       const expiry = data.proExpiry || now;
-      if (now > expiry) {
+
+      if (now >= expiry) {
         statusEl.textContent = "Subscription expired";
+        countdownEl.textContent = "";
         return;
       }
 
       statusEl.textContent = "Active";
       startCountdown(expiry);
 
-      // Day calculation
+      // Calculate current day in subscription
       const dayPassed = Math.floor((now - data.proStart) / (24*60*60*1000)) + 1;
       const claimedDay = data.vault?.claimedDay ?? 0;
 
@@ -109,20 +113,30 @@
         rewardCard.style.display = "block";
         claimBtn.disabled = false;
 
+        // Tomorrow’s preview
+        tomorrowRewardEl.textContent = `Tomorrow’s Reward: ₦${dayPassed + 1 === 1 ? 400 : 150}`;
+
         claimBtn.onclick = async () => {
+          const freshSnap = await get(ref(db, `users/${userId}`));
+          const freshData = freshSnap.val();
+          const newBalance = (freshData.balance ?? 0) + todayReward;
+
           await update(ref(db, `users/${userId}`), {
-            balance: (data.balance ?? 0) + todayReward,
+            balance: newBalance,
             vault: {
               claimedDay: dayPassed,
               lastClaim: now
             }
           });
+
           alert(`✅ You claimed ₦${todayReward}`);
           claimBtn.disabled = true;
+          rewardAmountEl.textContent = "Already claimed today";
         };
       } else {
         rewardCard.style.display = "block";
         rewardAmountEl.textContent = "Already claimed today";
+        tomorrowRewardEl.textContent = `Tomorrow’s Reward: ₦150`;
         claimBtn.disabled = true;
       }
     }
@@ -141,8 +155,8 @@
         const secs = Math.floor((diff % (60*1000)) / 1000);
         countdownEl.textContent = `Expires in: ${days}d ${hours}h ${mins}m ${secs}s`;
       }
-      setInterval(updateTimer, 1000);
       updateTimer();
+      setInterval(updateTimer, 1000);
     }
 
     loadVault();
