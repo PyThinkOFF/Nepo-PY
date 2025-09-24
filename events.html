@@ -14,6 +14,7 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      position: relative;
     }
 
     h1 {
@@ -120,10 +121,31 @@
       font-size: 15px;
       color: #ddd;
     }
+
+    /* Vault button */
+    .vault-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #00ffcc;
+      color: #000;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+      z-index: 100;
+    }
+    .vault-btn:hover {
+      background: #00cc99;
+    }
   </style>
 </head>
 <body>
   <h1>🎉 Nepo Events</h1>
+  <button id="vaultBtn" class="vault-btn" style="display:none;">Vault 💎</button>
+
   <div id="username" class="username">Loading...</div>
   <div id="balance" class="balance">Balance: ₦0</div>
   <button id="buyProBtn" class="buy-btn">Buy Pro Badge (₦700)</button>
@@ -148,7 +170,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
@@ -169,6 +191,7 @@
     const usernameEl = document.getElementById("username");
     const balanceEl = document.getElementById("balance");
     const buyProBtn = document.getElementById("buyProBtn");
+    const vaultBtn = document.getElementById("vaultBtn");
 
     if (!userId) {
       alert("Please login first.");
@@ -190,6 +213,7 @@
       if (snap.exists() && snap.val() === true) {
         showProBadge();
         buyProBtn.style.display = "none";
+        vaultBtn.style.display = "block"; // show Vault button if Pro
       }
     });
 
@@ -199,22 +223,39 @@
       let balance = balanceSnap.val() ?? 0;
 
       if (balance >= 700) {
+        const now = Date.now();
+        const expiry = now + 30 * 24 * 60 * 60 * 1000; // 30 days
+
         await update(ref(db, `users/${userId}`), {
           balance: balance - 700,
-          proBadge: true
+          proBadge: true,
+          proStart: now,
+          proExpiry: expiry,
+          vault: { claimedDay: 0, lastClaim: 0 }
         });
-        alert("🎉 Pro Badge purchased successfully!");
+
+        alert("🎉 Pro Badge purchased successfully! Go to Vault to claim rewards.");
+        showProBadge();
+        buyProBtn.style.display = "none";
+        vaultBtn.style.display = "block";
       } else {
         alert("❌ Not enough balance to buy Pro Badge.");
       }
     };
 
     function showProBadge() {
-      const badge = document.createElement("span");
-      badge.className = "pro-badge";
-      badge.textContent = "PRO ₦700";
-      usernameEl.appendChild(badge);
+      if (!document.querySelector(".pro-badge")) {
+        const badge = document.createElement("span");
+        badge.className = "pro-badge";
+        badge.textContent = "PRO ₦700";
+        usernameEl.appendChild(badge);
+      }
     }
+
+    // Vault button redirect
+    vaultBtn.onclick = () => {
+      window.location.href = "vault.html";
+    };
   </script>
 </body>
 </html>
