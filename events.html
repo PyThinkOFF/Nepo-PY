@@ -84,11 +84,26 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
       transition: background 0.3s;
     }
     .buy-btn:hover {
       background: #b8860b;
+    }
+
+    .buy-fire-btn {
+      background: #ff6b00;
+      color: #000;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 30px;
+      transition: background 0.3s;
+    }
+    .buy-fire-btn:hover {
+      background: #e55a00;
     }
 
     .events {
@@ -96,6 +111,7 @@
       gap: 20px;
       width: 100%;
       max-width: 600px;
+      margin-bottom: 30px;
     }
     .event {
       background: #1b1b1b;
@@ -140,6 +156,202 @@
     .vault-btn:hover {
       background: #00cc99;
     }
+
+    /* Chat Preview Styles */
+    .chat-preview {
+      width: 300px;
+      height: 350px;
+      background: #1a1a1a;
+      border-radius: 15px;
+      border: 2px solid #333;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      margin: 20px auto;
+    }
+
+    .preview-title {
+      text-align: center;
+      color: #00ffcc;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .preview-messages {
+      flex: 1;
+      background: #111;
+      border-radius: 10px;
+      padding: 10px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      background: #222;
+      padding: 8px 12px;
+      margin: 5px 0;
+      border-radius: 8px;
+      font-size: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .message.sent {
+      background: #00aaff;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .message.received {
+      background: #333;
+      margin-right: auto;
+    }
+
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      margin: 5px 0;
+      font-size: 12px;
+      color: #00ffcc;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 2px;
+    }
+
+    .typing-dot {
+      width: 4px;
+      height: 4px;
+      background: #00ffcc;
+      border-radius: 50%;
+      animation: typingPulse 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingPulse {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .preview-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .preview-btn {
+      flex: 1;
+      padding: 8px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.3s;
+    }
+
+    .preview-btn:hover {
+      background: #008fcc;
+    }
+
+    /* Fire Animation Styles */
+    .fire-animation {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 5px;
+    }
+
+    .flame {
+      position: absolute;
+      border-radius: 50%;
+      animation: flameMove 1.5s infinite alternate;
+    }
+
+    .flame-1 {
+      width: 6px;
+      height: 6px;
+      background: #ff0000;
+      top: 4px;
+      left: 7px;
+      animation-delay: 0s;
+    }
+
+    .flame-2 {
+      width: 5px;
+      height: 5px;
+      background: #ff6b00;
+      top: 6px;
+      left: 5px;
+      animation-delay: 0.2s;
+    }
+
+    .flame-3 {
+      width: 4px;
+      height: 4px;
+      background: #ff9500;
+      top: 8px;
+      left: 8px;
+      animation-delay: 0.4s;
+    }
+
+    @keyframes flameMove {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-1px) scale(1.1); }
+    }
+
+    .sending-indicator {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      margin: 5px 0;
+      font-size: 12px;
+      color: #ff9500;
+      margin-left: auto;
+      justify-content: flex-end;
+    }
+
+    .message-sent-effect {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .message-sent-effect::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 107, 0, 0.3), transparent);
+      animation: shine 0.8s ease;
+    }
+
+    .fire-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff6b00, #ff9500, #ff6b00);
+      color: #000;
+      margin-left: 5px;
+    }
+
+    .price-info {
+      font-size: 12px;
+      color: #00ffcc;
+      margin-bottom: 5px;
+    }
   </style>
 </head>
 <body>
@@ -148,7 +360,12 @@
 
   <div id="username" class="username">Loading...</div>
   <div id="balance" class="balance">Balance: ₦0</div>
-  <button id="buyProBtn" class="buy-btn">Buy Pro Badge (₦700)</button>
+  
+  <div class="price-info" id="proPriceInfo">Pro Badge: ₦700</div>
+  <button id="buyProBtn" class="buy-btn">Buy Pro Badge</button>
+  
+  <div class="price-info" id="firePriceInfo">Fire Chat Animation: ₦800</div>
+  <button id="buyFireBtn" class="buy-fire-btn">Buy Fire Chat Animation</button>
 
   <div class="events">
     <div class="event">
@@ -165,6 +382,39 @@
       <div class="event-title">🎤 Community Voice Stage</div>
       <div class="event-date">Sept 20, 2025</div>
       <div class="event-desc">Open mic for Nepo users worldwide. Pro members get priority spots!</div>
+    </div>
+  </div>
+
+  <!-- Chat Animation Preview -->
+  <div class="chat-preview">
+    <div class="preview-title">💬 Fire Chat Animation Preview</div>
+    <div class="preview-messages" id="previewMessages">
+      <div class="message received">Hello! 👋</div>
+      <div class="message sent">Hi there! 🔥</div>
+    </div>
+    
+    <div class="typing-indicator" id="typingIndicator">
+      <span>Friend is typing</span>
+      <div class="typing-dots">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>
+    
+    <div class="sending-indicator" id="sendingIndicator">
+      <span>Sending</span>
+      <div class="fire-animation">
+        <div class="flame flame-1"></div>
+        <div class="flame flame-2"></div>
+        <div class="flame flame-3"></div>
+      </div>
+    </div>
+    
+    <div class="preview-controls">
+      <button class="preview-btn" onclick="showSending()">Show Sending</button>
+      <button class="preview-btn" onclick="showTyping()">Show Typing</button>
+      <button class="preview-btn" onclick="resetPreview()">Reset</button>
     </div>
   </div>
 
@@ -191,7 +441,10 @@
     const usernameEl = document.getElementById("username");
     const balanceEl = document.getElementById("balance");
     const buyProBtn = document.getElementById("buyProBtn");
+    const buyFireBtn = document.getElementById("buyFireBtn");
     const vaultBtn = document.getElementById("vaultBtn");
+    const proPriceInfo = document.getElementById("proPriceInfo");
+    const firePriceInfo = document.getElementById("firePriceInfo");
 
     if (!userId) {
       alert("Please login first.");
@@ -207,17 +460,57 @@
       balanceEl.textContent = `Balance: ₦${snap.val() ?? 0}`;
     });
 
-    // Pro badge status
+    // Check user status and update prices
     const badgeRef = ref(db, `users/${userId}/proBadge`);
+    const fireAnimationRef = ref(db, `users/${userId}/fireAnimation`);
+    
     onValue(badgeRef, snap => {
-      if (snap.exists() && snap.val() === true) {
+      const isPro = snap.exists() && snap.val() === true;
+      
+      if (isPro) {
         showProBadge();
         buyProBtn.style.display = "none";
-        vaultBtn.style.display = "block"; // show Vault button if Pro
+        proPriceInfo.style.display = "none";
+        vaultBtn.style.display = "block";
+        
+        // Update fire animation price for Pro users
+        firePriceInfo.textContent = "Fire Chat Animation: ₦400 (Pro Discount!)";
+        updateFireButton();
+      } else {
+        buyProBtn.style.display = "block";
+        proPriceInfo.style.display = "block";
+        vaultBtn.style.display = "none";
+        firePriceInfo.textContent = "Fire Chat Animation: ₦800";
+        updateFireButton();
       }
     });
 
-    // Buy Pro
+    // Check fire animation status
+    onValue(fireAnimationRef, snap => {
+      updateFireButton();
+    });
+
+    function updateFireButton() {
+      get(fireAnimationRef).then(snap => {
+        const hasFireAnimation = snap.exists() && snap.val() === true;
+        
+        if (hasFireAnimation) {
+          buyFireBtn.textContent = "Fire Animation ✓ Activated";
+          buyFireBtn.disabled = true;
+          buyFireBtn.style.background = "#00cc99";
+          showFireBadge();
+        } else {
+          buyFireBtn.disabled = false;
+          buyFireBtn.style.background = "#ff6b00";
+          get(badgeRef).then(proSnap => {
+            const isPro = proSnap.exists() && proSnap.val() === true;
+            buyFireBtn.textContent = isPro ? "Buy Fire Animation (₦400)" : "Buy Fire Animation (₦800)";
+          });
+        }
+      });
+    }
+
+    // Buy Pro Badge (₦700)
     buyProBtn.onclick = async () => {
       const balanceSnap = await get(balanceRef);
       let balance = balanceSnap.val() ?? 0;
@@ -234,12 +527,31 @@
           vault: { claimedDay: 0, lastClaim: 0 }
         });
 
-        alert("🎉 Pro Badge purchased successfully! Go to Vault to claim rewards.");
-        showProBadge();
-        buyProBtn.style.display = "none";
-        vaultBtn.style.display = "block";
+        alert("🎉 Pro Badge purchased successfully!");
       } else {
-        alert("❌ Not enough balance to buy Pro Badge.");
+        alert("❌ Not enough balance to buy Pro Badge. Need ₦700");
+      }
+    };
+
+    // Buy Fire Chat Animation
+    buyFireBtn.onclick = async () => {
+      const balanceSnap = await get(balanceRef);
+      let balance = balanceSnap.val() ?? 0;
+      
+      // Check if user is Pro to determine price
+      const proSnap = await get(badgeRef);
+      const isPro = proSnap.exists() && proSnap.val() === true;
+      const price = isPro ? 400 : 800;
+
+      if (balance >= price) {
+        await update(ref(db, `users/${userId}`), {
+          balance: balance - price,
+          fireAnimation: true
+        });
+
+        alert("🎉 Fire Chat Animation activated! Enjoy the cool animations!");
+      } else {
+        alert(`❌ Not enough balance. Need ₦${price}`);
       }
     };
 
@@ -247,7 +559,16 @@
       if (!document.querySelector(".pro-badge")) {
         const badge = document.createElement("span");
         badge.className = "pro-badge";
-        badge.textContent = "PRO ₦700";
+        badge.textContent = "PRO";
+        usernameEl.appendChild(badge);
+      }
+    }
+
+    function showFireBadge() {
+      if (!document.querySelector(".fire-badge")) {
+        const badge = document.createElement("span");
+        badge.className = "fire-badge";
+        badge.innerHTML = "🔥 FIRE";
         usernameEl.appendChild(badge);
       }
     }
@@ -256,6 +577,65 @@
     vaultBtn.onclick = () => {
       window.location.href = "vault.html";
     };
+
+    // Chat Preview Functions
+    function showSending() {
+      const messages = document.getElementById('previewMessages');
+      const sendingIndicator = document.getElementById('sendingIndicator');
+      
+      sendingIndicator.style.display = 'flex';
+      
+      setTimeout(() => {
+        sendingIndicator.style.display = 'none';
+        
+        const sentMsg = document.createElement('div');
+        sentMsg.className = 'message sent message-sent-effect';
+        sentMsg.textContent = 'This is a sent message! 🔥';
+        messages.appendChild(sentMsg);
+        
+        messages.scrollTop = messages.scrollHeight;
+        
+        setTimeout(() => {
+          sentMsg.classList.remove('message-sent-effect');
+        }, 1000);
+      }, 2000);
+    }
+
+    function showTyping() {
+      const typingIndicator = document.getElementById('typingIndicator');
+      
+      typingIndicator.style.display = 'flex';
+      
+      setTimeout(() => {
+        typingIndicator.style.display = 'none';
+        
+        const messages = document.getElementById('previewMessages');
+        const receivedMsg = document.createElement('div');
+        receivedMsg.className = 'message received';
+        receivedMsg.textContent = 'Just typed this message! 👋';
+        messages.appendChild(receivedMsg);
+        
+        messages.scrollTop = messages.scrollHeight;
+      }, 3000);
+    }
+
+    function resetPreview() {
+      const messages = document.getElementById('previewMessages');
+      const typingIndicator = document.getElementById('typingIndicator');
+      const sendingIndicator = document.getElementById('sendingIndicator');
+      
+      typingIndicator.style.display = 'none';
+      sendingIndicator.style.display = 'none';
+      
+      messages.innerHTML = `
+        <div class="message received">Hello! 👋</div>
+        <div class="message sent">Hi there! 🔥</div>
+      `;
+    }
+
+    window.showSending = showSending;
+    window.showTyping = showTyping;
+    window.resetPreview = resetPreview;
   </script>
 </body>
 </html>
