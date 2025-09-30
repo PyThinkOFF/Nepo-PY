@@ -64,6 +64,24 @@
       background: #555;
       color: white;
     }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .spinner {
+      border: 3px solid #333;
+      border-top: 3px solid #00aaff;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -76,6 +94,11 @@
     <input type="password" id="loginPassword" placeholder="Password" />
     <button id="loginBtn">Login</button>
     <button id="createBtn">Create Account</button>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div style="margin-top: 10px;">Signing in...</div>
+    </div>
   </div>
 
   <p id="status"></p>
@@ -91,8 +114,8 @@
   <!-- Firebase Modular SDK (v12) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCoRQZYMukYZoqkbY6q0heK3yO9zNFYUfE",
@@ -109,21 +132,31 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
     const status = document.getElementById("status");
+    const loading = document.getElementById("loading");
 
-    // Force sign out any existing session on page load
-    auth.signOut().catch(() => {
-      // no user signed in yet - ignore errors
-    });
-
-    // Disable auto-login redirect by NOT redirecting here
+    // Check if user is already logged in
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        status.textContent = `You are already signed in as ${user.email}. Please logout first to switch account.`;
+        // User is signed in, redirect to home
+        try {
+          const userRef = ref(db, "users/" + user.uid);
+          const snap = await get(userRef);
+          const userData = snap.val();
+          
+          localStorage.setItem("nepo_user_id", user.uid);
+          localStorage.setItem("nepo_user_email", user.email);
+          localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
+          
+          window.location.href = "home.html";
+        } catch (error) {
+          console.error("Error checking user data:", error);
+        }
       } else {
         status.textContent = "Please sign in to continue.";
       }
     });
 
+    // Login function
     document.getElementById("loginBtn").onclick = async () => {
       const email = document.getElementById("loginEmail").value.trim();
       const password = document.getElementById("loginPassword").value.trim();
@@ -133,48 +166,178 @@
         return;
       }
 
+      // Show loading
+      document.getElementById("loginBtn").disabled = true;
+      loading.style.display = "block";
+      status.textContent = "";
+
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
+        const user = userCredential.user;
+        const uid = user.uid;
 
+        // Check if user is banned
         const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
         if (bannedSnap.exists()) {
           document.getElementById("suspendMessage").textContent =
-            `❌ Your ID "${email}" has been banned by moderators.`;
+            `❌ Your account "${email}" has been banned by moderators.`;
           document.getElementById("suspendModal").style.display = "flex";
+          await auth.signOut();
+          resetUI();
           return;
         }
 
-        const snap = await get(ref(db, "users/" + uid));
-        const userData = snap.val();
-        localStorage.setItem("nepo_user_id", uid);
-        localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
+        // Get user data from database
+        const userRef = ref(db, "users/" + uid);
+        const snap = await get(userRef);
+        
+        if (!snap.exists()) {
+          // Create user profile if it doesn't exist
+          await set(userRef, {
+            uid: uid,
+            email: email,
+            displayName: email.split('@')[0],
+            balance: 1000,
+            online: true,
+            lastSeen: Date.now(),
+            createdAt: Date.now(),
+            verified: false
+          });
+        } else {
+          // Update online status
+          await set(ref(db, `users/${uid}/online`), true);
+          await set(ref(db, `users/${uid}/lastSeen`), Date.now());
+        }
 
-        status.textContent = "✅ Login successful!";
-        setTimeout(() => window.location.href = "home.html", 1000);
+        const userData = snap.val() || {};
+        
+        // Store user session
+        localStorage.setItem("nepo_user_id", uid);
+        localStorage.setItem("nepo_user_email", email);
+        localStorage.setItem("nepo_profile_name", userData.displayName || email.split('@')[0]);
+
+        status.textContent = "✅ Login successful! Redirecting...";
+        
+        // Redirect to home page
+        setTimeout(() => {
+          window.location.href = "home.html";
+        }, 1000);
+
       } catch (err) {
+        console.error("Login error:", err);
+        
         if (err.code === "auth/user-disabled") {
           document.getElementById("suspendMessage").textContent =
-            `❌ Your ID "${email}" has been suspended by the PySecurity Team.`;
+            `❌ Your account "${email}" has been suspended by the PySecurity Team.`;
           document.getElementById("suspendModal").style.display = "flex";
+        } else if (err.code === "auth/user-not-found") {
+          status.textContent = "❌ Account not found. Please create an account first.";
+        } else if (err.code === "auth/wrong-password") {
+          status.textContent = "❌ Incorrect password. Please try again.";
+        } else if (err.code === "auth/invalid-email") {
+          status.textContent = "❌ Invalid email address.";
+        } else if (err.code === "auth/too-many-requests") {
+          status.textContent = "❌ Too many failed attempts. Please try again later.";
         } else {
-          status.textContent = "❌ " + err.message;
+          status.textContent = "❌ Login failed: " + err.message;
         }
+        resetUI();
       }
     };
 
-    document.getElementById("createBtn").onclick = () => {
-      window.location.href = "create.html";
+    // Create account function
+    document.getElementById("createBtn").onclick = async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      if (!email || !password) {
+        status.textContent = "❌ Enter email and password to create account";
+        return;
+      }
+
+      if (password.length < 6) {
+        status.textContent = "❌ Password must be at least 6 characters";
+        return;
+      }
+
+      // Show loading
+      document.getElementById("createBtn").disabled = true;
+      loading.style.display = "block";
+      status.textContent = "";
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        const uid = user.uid;
+
+        // Create user profile in database
+        await set(ref(db, "users/" + uid), {
+          uid: uid,
+          email: email,
+          displayName: email.split('@')[0],
+          balance: 1000,
+          online: true,
+          lastSeen: Date.now(),
+          createdAt: Date.now(),
+          verified: false
+        });
+
+        // Store user session
+        localStorage.setItem("nepo_user_id", uid);
+        localStorage.setItem("nepo_user_email", email);
+        localStorage.setItem("nepo_profile_name", email.split('@')[0]);
+
+        status.textContent = "✅ Account created successfully! Redirecting...";
+        
+        // Redirect to home page
+        setTimeout(() => {
+          window.location.href = "home.html";
+        }, 1000);
+
+      } catch (err) {
+        console.error("Create account error:", err);
+        
+        if (err.code === "auth/email-already-in-use") {
+          status.textContent = "❌ Email already in use. Please login instead.";
+        } else if (err.code === "auth/invalid-email") {
+          status.textContent = "❌ Invalid email address.";
+        } else if (err.code === "auth/weak-password") {
+          status.textContent = "❌ Password is too weak.";
+        } else {
+          status.textContent = "❌ Account creation failed: " + err.message;
+        }
+        resetUI();
+      }
     };
 
+    // Modal buttons
     document.getElementById("okBtn").onclick = () => {
       document.getElementById("suspendModal").style.display = "none";
-      // Optionally clear inputs or redirect to signin.html here
+      resetUI();
     };
 
     document.getElementById("helpBtn").onclick = () => {
-      alert("⚠️ This feature is not available now. Please create a new ID and request to PySecurity Team.");
+      alert("⚠️ For account assistance, please contact support.");
     };
+
+    // Enter key support
+    document.getElementById("loginPassword").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("loginBtn").click();
+      }
+    });
+
+    function resetUI() {
+      document.getElementById("loginBtn").disabled = false;
+      document.getElementById("createBtn").disabled = false;
+      loading.style.display = "none";
+    }
+
+    // Auto-focus on email field
+    document.getElementById("loginEmail").focus();
+
+    console.log("🔐 Nepo Chat Login Page Loaded");
+
   </script>
 </body>
 </html>
