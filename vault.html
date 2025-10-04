@@ -12,8 +12,13 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      min-height: 100vh;
     }
-    h1 { color: #00ffcc; margin-bottom: 10px; }
+    h1 { 
+      color: #00ffcc; 
+      margin-bottom: 10px; 
+      text-align: center;
+    }
     .card {
       background: #1b1b1b;
       padding: 20px;
@@ -23,31 +28,113 @@
       margin: 10px 0;
       text-align: center;
       border: 1px solid #333;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
-    .countdown { color: #ffcc00; font-size: 18px; margin: 10px 0; }
-    .reward { margin: 10px 0; font-size: 16px; }
+    .countdown { 
+      color: #ffcc00; 
+      font-size: 18px; 
+      margin: 10px 0; 
+      font-weight: bold;
+    }
+    .reward { 
+      margin: 10px 0; 
+      font-size: 16px; 
+      color: #00ffcc;
+    }
+    .status {
+      font-size: 16px;
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.1);
+    }
     button {
       background: #00ffcc;
       border: none;
       border-radius: 8px;
-      padding: 10px 16px;
+      padding: 12px 20px;
       cursor: pointer;
       font-weight: bold;
+      color: #000;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin-top: 10px;
     }
-    button:disabled { background: #555; cursor: not-allowed; }
+    button:hover:not(:disabled) {
+      background: #00cc99;
+      transform: translateY(-2px);
+    }
+    button:disabled { 
+      background: #555; 
+      cursor: not-allowed;
+      transform: none;
+    }
+    .error-message {
+      color: #ff5555;
+      background: rgba(255, 85, 85, 0.1);
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border: 1px solid rgba(255, 85, 85, 0.3);
+    }
+    .success-message {
+      color: #00ffcc;
+      background: rgba(0, 255, 204, 0.1);
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      border: 1px solid rgba(0, 255, 204, 0.3);
+    }
+    .navigation {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .nav-btn {
+      background: #2a2a2a;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .nav-btn:hover {
+      background: #3a3a3a;
+    }
   </style>
 </head>
 <body>
   <h1>💎 Nepo Vault</h1>
+  <div class="card">
+    <div class="status"><strong>User:</strong> <span id="userName">Loading...</span></div>
+    <div class="status"><strong>Balance:</strong> ₦<span id="userBalance">0</span></div>
+  </div>
+
   <div id="subCard" class="card">
-    <div><strong>Subscription:</strong> <span id="status">Loading...</span></div>
+    <div class="status"><strong>Subscription:</strong> <span id="status">Loading...</span></div>
     <div class="countdown" id="countdown"></div>
   </div>
 
   <div id="rewardCard" class="card" style="display:none;">
-    <div class="reward">Today’s Reward: ₦<span id="rewardAmount">0</span></div>
+    <div class="reward">🎁 Today's Reward: ₦<span id="rewardAmount">0</span></div>
     <div class="reward" id="tomorrowReward"></div>
-    <button id="claimBtn">Claim</button>
+    <button id="claimBtn">💰 Claim Reward</button>
+    <div id="claimMessage" style="display:none;"></div>
+  </div>
+
+  <div id="noSubCard" class="card" style="display:none;">
+    <div class="error-message">
+      🔒 Pro Subscription Required
+    </div>
+    <p>You need an active Pro subscription to access daily rewards.</p>
+    <button onclick="window.location.href='premium.html'">💎 Get Pro</button>
+  </div>
+
+  <div class="navigation">
+    <button class="nav-btn" onclick="window.location.href='home.html'">🏠 Home</button>
+    <button class="nav-btn" onclick="window.location.href='profile.html'">👤 Profile</button>
   </div>
 
   <script type="module">
@@ -67,77 +154,164 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Security check - using your custom authentication
     const userId = localStorage.getItem("nepo_user_id");
+    const userName = localStorage.getItem("nepo_user_name") || "User";
+
     if (!userId) {
       alert("Please login first.");
       window.location.href = "signin.html";
     }
 
+    // DOM Elements
+    const userNameEl = document.getElementById("userName");
+    const userBalanceEl = document.getElementById("userBalance");
     const statusEl = document.getElementById("status");
     const countdownEl = document.getElementById("countdown");
     const rewardCard = document.getElementById("rewardCard");
     const rewardAmountEl = document.getElementById("rewardAmount");
     const tomorrowRewardEl = document.getElementById("tomorrowReward");
     const claimBtn = document.getElementById("claimBtn");
+    const claimMessage = document.getElementById("claimMessage");
+    const noSubCard = document.getElementById("noSubCard");
+
+    // Initialize user info
+    userNameEl.textContent = userName;
 
     async function loadVault() {
-      const userSnap = await get(ref(db, `users/${userId}`));
-      if (!userSnap.exists()) return;
-      const data = userSnap.val();
+      try {
+        const userSnap = await get(ref(db, `users/${userId}`));
+        
+        if (!userSnap.exists()) {
+          statusEl.textContent = "User profile not found";
+          noSubCard.style.display = "block";
+          return;
+        }
 
-      if (!data.proBadge) {
-        statusEl.textContent = "No active Pro subscription";
-        return;
-      }
+        const data = userSnap.val();
+        
+        // Update balance display
+        userBalanceEl.textContent = data.balance || 0;
 
-      const now = Date.now();
-      const expiry = data.proExpiry || now;
+        // Check for Pro subscription (using your existing system)
+        const hasPro = data.proBadge || data.subscription === 'pro' || data.isPro;
+        const proStart = data.proStart || data.subscriptionStart;
+        const proExpiry = data.proExpiry || data.subscriptionEnd;
 
-      if (now >= expiry) {
-        statusEl.textContent = "Subscription expired";
-        countdownEl.textContent = "";
-        return;
-      }
+        if (!hasPro || !proStart) {
+          statusEl.textContent = "No active Pro subscription";
+          noSubCard.style.display = "block";
+          return;
+        }
 
-      statusEl.textContent = "Active";
-      startCountdown(expiry);
+        const now = Date.now();
+        const expiry = proExpiry || (now + (30 * 24 * 60 * 60 * 1000)); // Default 30 days if no expiry
 
-      // Calculate current day in subscription
-      const dayPassed = Math.floor((now - data.proStart) / (24*60*60*1000)) + 1;
-      const claimedDay = data.vault?.claimedDay ?? 0;
+        if (now >= expiry) {
+          statusEl.textContent = "Subscription expired";
+          countdownEl.textContent = "";
+          noSubCard.style.display = "block";
+          return;
+        }
 
-      let todayReward = 0;
-      if (claimedDay < dayPassed) {
-        todayReward = (dayPassed === 1) ? 400 : 150;
-        rewardAmountEl.textContent = todayReward;
-        rewardCard.style.display = "block";
-        claimBtn.disabled = false;
+        statusEl.textContent = "Active Pro Subscription";
+        startCountdown(expiry);
 
-        // Tomorrow’s preview
-        tomorrowRewardEl.textContent = `Tomorrow’s Reward: ₦${dayPassed + 1 === 1 ? 400 : 150}`;
+        // Calculate current day in subscription
+        const dayPassed = Math.floor((now - proStart) / (24 * 60 * 60 * 1000)) + 1;
+        const claimedDay = data.vault?.claimedDay || 0;
+        const lastClaim = data.vault?.lastClaim || 0;
 
-        claimBtn.onclick = async () => {
-          const freshSnap = await get(ref(db, `users/${userId}`));
-          const freshData = freshSnap.val();
-          const newBalance = (freshData.balance ?? 0) + todayReward;
+        let todayReward = 0;
+        
+        // Check if user can claim today
+        const canClaimToday = claimedDay < dayPassed;
+        const today = new Date().toDateString();
+        const lastClaimDate = lastClaim ? new Date(lastClaim).toDateString() : null;
+        const alreadyClaimedToday = lastClaimDate === today;
 
-          await update(ref(db, `users/${userId}`), {
-            balance: newBalance,
-            vault: {
-              claimedDay: dayPassed,
-              lastClaim: now
+        if (canClaimToday && !alreadyClaimedToday) {
+          // Calculate reward based on day
+          todayReward = (dayPassed === 1) ? 400 : 150;
+          rewardAmountEl.textContent = todayReward;
+          rewardCard.style.display = "block";
+          claimBtn.disabled = false;
+
+          // Tomorrow's preview
+          const tomorrowReward = (dayPassed + 1 === 1) ? 400 : 150;
+          tomorrowRewardEl.textContent = `Tomorrow's Reward: ₦${tomorrowReward}`;
+
+          claimBtn.onclick = async () => {
+            try {
+              claimBtn.disabled = true;
+              claimBtn.textContent = "Claiming...";
+
+              // Get fresh data to prevent race conditions
+              const freshSnap = await get(ref(db, `users/${userId}`));
+              const freshData = freshSnap.val();
+              
+              if (!freshData) {
+                throw new Error("User data not found");
+              }
+
+              const currentBalance = freshData.balance || 0;
+              const newBalance = currentBalance + todayReward;
+
+              await update(ref(db, `users/${userId}`), {
+                balance: newBalance,
+                vault: {
+                  claimedDay: dayPassed,
+                  lastClaim: now,
+                  totalClaimed: (freshData.vault?.totalClaimed || 0) + todayReward
+                }
+              });
+
+              // Update UI
+              userBalanceEl.textContent = newBalance;
+              claimMessage.textContent = `✅ Successfully claimed ₦${todayReward}!`;
+              claimMessage.className = "success-message";
+              claimMessage.style.display = "block";
+              rewardAmountEl.textContent = "Claimed today";
+              claimBtn.textContent = "Already Claimed";
+              
+              // Hide claim button after successful claim
+              setTimeout(() => {
+                claimBtn.style.display = "none";
+              }, 2000);
+
+            } catch (error) {
+              console.error("Claim error:", error);
+              claimMessage.textContent = "❌ Failed to claim reward. Please try again.";
+              claimMessage.className = "error-message";
+              claimMessage.style.display = "block";
+              claimBtn.disabled = false;
+              claimBtn.textContent = "💰 Claim Reward";
             }
-          });
+          };
 
-          alert(`✅ You claimed ₦${todayReward}`);
+        } else {
+          // Already claimed today or can't claim
+          rewardCard.style.display = "block";
+          rewardAmountEl.textContent = alreadyClaimedToday ? "Already claimed today" : "No reward available";
+          
+          // Show tomorrow's reward preview
+          const tomorrowReward = (dayPassed + 1 === 1) ? 400 : 150;
+          tomorrowRewardEl.textContent = `Tomorrow's Reward: ₦${tomorrowReward}`;
+          
           claimBtn.disabled = true;
-          rewardAmountEl.textContent = "Already claimed today";
-        };
-      } else {
-        rewardCard.style.display = "block";
-        rewardAmountEl.textContent = "Already claimed today";
-        tomorrowRewardEl.textContent = `Tomorrow’s Reward: ₦150`;
-        claimBtn.disabled = true;
+          claimBtn.textContent = alreadyClaimedToday ? "✅ Already Claimed" : "Cannot Claim";
+          
+          if (alreadyClaimedToday) {
+            claimBtn.style.display = "none";
+          }
+        }
+
+      } catch (error) {
+        console.error("Vault loading error:", error);
+        statusEl.textContent = "Error loading vault";
+        claimMessage.textContent = "❌ Error loading vault data. Please try again.";
+        claimMessage.className = "error-message";
+        claimMessage.style.display = "block";
       }
     }
 
@@ -145,21 +319,43 @@
       function updateTimer() {
         const now = Date.now();
         const diff = expiry - now;
+        
         if (diff <= 0) {
-          countdownEl.textContent = "Expired";
+          countdownEl.textContent = "Subscription Expired";
+          countdownEl.style.color = "#ff5555";
           return;
         }
-        const days = Math.floor(diff / (24*60*60*1000));
-        const hours = Math.floor((diff % (24*60*60*1000)) / (60*60*1000));
-        const mins = Math.floor((diff % (60*60*1000)) / (60*1000));
-        const secs = Math.floor((diff % (60*1000)) / 1000);
+        
+        const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        const mins = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+        const secs = Math.floor((diff % (60 * 1000)) / 1000);
+        
         countdownEl.textContent = `Expires in: ${days}d ${hours}h ${mins}m ${secs}s`;
+        
+        // Change color when less than 24 hours remaining
+        if (days === 0 && hours < 24) {
+          countdownEl.style.color = "#ff9500";
+        }
       }
+      
       updateTimer();
       setInterval(updateTimer, 1000);
     }
 
+    // Real-time balance updates
+    onValue(ref(db, `users/${userId}/balance`), (snapshot) => {
+      const balance = snapshot.val();
+      if (balance !== null) {
+        userBalanceEl.textContent = balance;
+      }
+    });
+
+    // Load vault data
     loadVault();
+
+    console.log("💎 Nepo Vault loaded for user:", userName);
+
   </script>
 </body>
 </html>
