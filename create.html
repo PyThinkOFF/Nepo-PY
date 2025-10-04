@@ -179,6 +179,32 @@
             margin-top: 5px;
         }
 
+        .demo-accounts {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .demo-title {
+            color: #00aaff;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .demo-account {
+            margin: 5px 0;
+            color: #aaa;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .demo-account:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         @media (max-width: 480px) {
             .container {
                 padding: 20px;
@@ -206,9 +232,9 @@
 
             <div class="form-group">
                 <label for="signupPassword">Password *</label>
-                <input type="password" id="signupPassword" placeholder="Create a strong password" required minlength="8" />
+                <input type="password" id="signupPassword" placeholder="Create a strong password" required minlength="6" />
                 <div class="password-requirements">
-                    Must be at least 8 characters long
+                    Must be at least 6 characters long
                 </div>
             </div>
 
@@ -217,18 +243,23 @@
                 <input type="password" id="confirmPassword" placeholder="Confirm your password" required />
             </div>
 
-            <div class="form-group">
-                <label>Profile Picture (Optional)</label>
-                <div class="file-input" id="fileInputArea">
-                    <input type="file" id="profilePic" accept="image/*" />
-                    <div class="file-label" id="fileLabel">📷 Click to upload profile picture</div>
-                </div>
-            </div>
-
             <button type="submit" id="signupBtn">Create Account</button>
 
             <div class="status" id="status"></div>
         </form>
+
+        <div class="demo-accounts">
+            <div class="demo-title">Quick Demo Accounts:</div>
+            <div class="demo-account" onclick="fillDemoAccount('demo@nepochat.com', 'demo123', 'Demo User')">
+                📧 demo@nepochat.com | 🔑 demo123 | 👤 Demo User
+            </div>
+            <div class="demo-account" onclick="fillDemoAccount('test@nepochat.com', 'test123', 'Test User')">
+                📧 test@nepochat.com | 🔑 test123 | 👤 Test User
+            </div>
+            <div class="demo-account" onclick="fillDemoAccount('user@nepochat.com', 'user123', 'Regular User')">
+                📧 user@nepochat.com | 🔑 user123 | 👤 Regular User
+            </div>
+        </div>
 
         <div class="login-link">
             Already have an account? <a href="index.html">Sign In</a>
@@ -243,9 +274,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-storage.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
         // Your Firebase configuration
         const firebaseConfig = {
@@ -261,9 +290,7 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getDatabase(app);
-        const storage = getStorage(app);
 
         // DOM Elements
         const signupForm = document.getElementById('signupForm');
@@ -271,39 +298,17 @@
         const signupEmail = document.getElementById('signupEmail');
         const signupPassword = document.getElementById('signupPassword');
         const confirmPassword = document.getElementById('confirmPassword');
-        const profilePic = document.getElementById('profilePic');
         const signupBtn = document.getElementById('signupBtn');
         const status = document.getElementById('status');
-        const fileInputArea = document.getElementById('fileInputArea');
-        const fileLabel = document.getElementById('fileLabel');
 
-        // File input handling
-        fileInputArea.addEventListener('click', () => profilePic.click());
-        profilePic.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                const file = this.files[0];
-                
-                // Validate file type
-                if (!file.type.startsWith('image/')) {
-                    showStatus('Please select a valid image file', 'error');
-                    this.value = '';
-                    return;
-                }
-
-                // Validate file size (max 2MB)
-                if (file.size > 2 * 1024 * 1024) {
-                    showStatus('Profile picture must be less than 2MB', 'error');
-                    this.value = '';
-                    return;
-                }
-
-                fileLabel.textContent = `📷 ${file.name}`;
-                fileLabel.classList.add('has-file');
-            } else {
-                fileLabel.textContent = '📷 Click to upload profile picture';
-                fileLabel.classList.remove('has-file');
-            }
-        });
+        // Fill demo account function
+        window.fillDemoAccount = (email, password, name) => {
+            document.getElementById('signupEmail').value = email;
+            document.getElementById('signupPassword').value = password;
+            document.getElementById('confirmPassword').value = password;
+            document.getElementById('signupName').value = name;
+            showStatus('💡 Demo account filled! Click "Create Account" to continue.', 'success');
+        };
 
         // Form submission
         signupForm.addEventListener('submit', async (e) => {
@@ -313,7 +318,6 @@
             const email = signupEmail.value.trim().toLowerCase();
             const password = signupPassword.value;
             const confirm = confirmPassword.value;
-            const file = profilePic.files[0];
 
             // Validation
             if (!name || !email || !password || !confirm) {
@@ -326,8 +330,8 @@
                 return;
             }
 
-            if (password.length < 8) {
-                showStatus('Password must be at least 8 characters long', 'error');
+            if (password.length < 6) {
+                showStatus('Password must be at least 6 characters long', 'error');
                 return;
             }
 
@@ -349,40 +353,39 @@
             signupBtn.textContent = 'Creating Account...';
 
             try {
-                // Create user with Firebase Auth
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                const uid = user.uid;
-
-                let photoURL = "";
+                // Generate user ID from email
+                const userId = generateUserId(email);
                 
-                // Upload profile picture if provided
-                if (file) {
-                    try {
-                        const fileRef = sRef(storage, `profile_pics/${uid}/${file.name}`);
-                        const snapshot = await uploadBytes(fileRef, file);
-                        photoURL = await getDownloadURL(snapshot.ref);
-                    } catch (uploadError) {
-                        console.error('Profile picture upload failed:', uploadError);
-                        // Continue without profile picture if upload fails
-                    }
+                // Check if user already exists
+                const userRef = ref(db, 'users/' + userId);
+                const snapshot = await get(userRef);
+                
+                if (snapshot.exists()) {
+                    showStatus('❌ This email is already registered. Please use a different email or login.', 'error');
+                    signupBtn.disabled = false;
+                    signupBtn.textContent = 'Create Account';
+                    return;
                 }
 
-                // Save user data to Realtime Database
-                await set(ref(db, 'users/' + uid), {
+                // Create user in database (custom authentication)
+                await set(userRef, {
+                    uid: userId,
                     displayName: name,
                     email: email,
-                    photoURL: photoURL,
-                    createdAt: new Date().toISOString(),
-                    lastLogin: new Date().toISOString(),
+                    password: password, // In production, this should be hashed!
+                    balance: 1000,
+                    online: true,
+                    lastSeen: Date.now(),
+                    createdAt: Date.now(),
+                    verified: false,
                     role: 'user'
                 });
 
                 // Show success message
                 showStatus('✅ Account created successfully! Redirecting...', 'success');
 
-                // Store basic user info in localStorage
-                localStorage.setItem('nepo_user_id', uid);
+                // Store user session in localStorage (custom authentication)
+                localStorage.setItem('nepo_user_id', userId);
                 localStorage.setItem('nepo_user_name', name);
                 localStorage.setItem('nepo_user_email', email);
 
@@ -394,24 +397,14 @@
             } catch (error) {
                 console.error('Signup error:', error);
                 
-                // User-friendly error messages
                 let errorMessage = 'Failed to create account. ';
                 
-                switch (error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage += 'This email is already registered.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'Invalid email address.';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage += 'Password is too weak.';
-                        break;
-                    case 'auth/network-request-failed':
-                        errorMessage += 'Network error. Please check your connection.';
-                        break;
-                    default:
-                        errorMessage += 'Please try again.';
+                if (error.code === 'PERMISSION_DENIED') {
+                    errorMessage += 'Database permission denied. Please contact support.';
+                } else if (error.message.includes('quota')) {
+                    errorMessage += 'Database quota exceeded. Please try again later.';
+                } else {
+                    errorMessage += 'Please check your connection and try again.';
                 }
                 
                 showStatus('❌ ' + errorMessage, 'error');
@@ -421,6 +414,17 @@
                 signupBtn.textContent = 'Create Account';
             }
         });
+
+        // Generate consistent user ID from email
+        function generateUserId(email) {
+            // Create a simple hash from email for consistent user ID
+            let hash = 0;
+            for (let i = 0; i < email.length; i++) {
+                hash = ((hash << 5) - hash) + email.charCodeAt(i);
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            return 'user_' + Math.abs(hash).toString(36);
+        }
 
         function showStatus(message, type) {
             status.textContent = message;
@@ -436,11 +440,12 @@
 
         // Input validation helpers
         signupName.addEventListener('input', function() {
-            this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+            // Allow only letters, spaces, and basic punctuation
+            this.value = this.value.replace(/[^a-zA-Z\s\-'.]/g, '');
         });
 
         signupPassword.addEventListener('input', function() {
-            if (this.value.length < 8) {
+            if (this.value.length < 6) {
                 this.style.borderColor = '#e74c3c';
             } else {
                 this.style.borderColor = '#2ecc71';
@@ -454,6 +459,12 @@
                 this.style.borderColor = '#2ecc71';
             }
         });
+
+        // Auto-focus on name field
+        signupName.focus();
+
+        console.log("🔐 Create Account Page Loaded - Custom Authentication System");
+
     </script>
 </body>
 </html>
