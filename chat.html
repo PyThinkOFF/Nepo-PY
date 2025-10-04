@@ -278,6 +278,17 @@
             border: 1px solid rgba(0, 170, 255, 0.3);
         }
 
+        /* Error Message */
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff5555;
+            padding: 10px;
+            margin: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .message {
@@ -338,6 +349,7 @@
             <div id="userBadges"></div>
         </div>
         <div class="header-controls">
+            <button id="homeBtn" class="header-btn" title="Home">🏠 Home</button>
             <button id="callBtn" class="header-btn call" title="Start voice call">📞 Call</button>
             <button id="settingsBtn" class="header-btn" title="Settings">⚙️</button>
             <button id="logoutBtn" class="header-btn" title="Logout">Logout</button>
@@ -347,8 +359,13 @@
     <div class="chat-container">
         <div id="chatBox" class="chat-box">
             <div class="status-message" id="welcomeMessage">
-                💬 Welcome to secure chat. Your messages are encrypted in transit.
+                💬 Welcome to Nepo Chat. Connecting to secure chat room...
             </div>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage" style="display: none;">
+            Unable to connect to chat. Please check your connection.
         </div>
 
         <!-- Typing Indicator -->
@@ -410,11 +427,12 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Security check
+        // Security check - using your custom authentication system
         const userId = localStorage.getItem("nepo_user_id");
-        const userName = localStorage.getItem("nepo_user_name") || "User";
+        const userEmail = localStorage.getItem("nepo_user_email");
+        const userName = localStorage.getItem("nepo_profile_name") || "User";
 
-        if (!userId) {
+        if (!userId || !userEmail) {
             alert("Authentication required. Please sign in.");
             window.location.href = "signin.html";
             throw new Error("User not authenticated");
@@ -430,12 +448,44 @@
         const typingIndicator = document.getElementById("typingIndicator");
         const typingUserEl = document.getElementById("typingUser");
         const welcomeMessage = document.getElementById("welcomeMessage");
+        const errorMessage = document.getElementById("errorMessage");
+        const homeBtn = document.getElementById("homeBtn");
         const callBtn = document.getElementById("callBtn");
         const settingsBtn = document.getElementById("settingsBtn");
         const logoutBtn = document.getElementById("logoutBtn");
 
         // Initialize user interface
         usernameEl.textContent = userName;
+
+        // Chat room configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const room = urlParams.get("room") || "global";
+        const otherUserId = urlParams.get("user");
+
+        // Security: Validate room name
+        if (!/^[a-zA-Z0-9_-]+$/.test(room)) {
+            alert("Invalid room specified.");
+            window.location.href = "home.html";
+            throw new Error("Invalid room name");
+        }
+
+        // Firebase references - using your database structure
+        const messagesRef = ref(db, `chats/${room}`);
+        const typingRef = ref(db, `typing/${room}/${userId}`);
+        const userStatusRef = ref(db, `users/${userId}`);
+
+        // Update user online status
+        async function updateUserStatus() {
+            try {
+                await update(userStatusRef, {
+                    online: true,
+                    lastSeen: Date.now(),
+                    currentRoom: room
+                });
+            } catch (error) {
+                console.warn("Could not update user status:", error);
+            }
+        }
 
         // Security: Input sanitization
         function sanitizeInput(input) {
@@ -462,22 +512,7 @@
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
 
-        // Chat room configuration
-        const urlParams = new URLSearchParams(window.location.search);
-        const room = urlParams.get("room") || "global";
-        const otherUserId = urlParams.get("user");
-
-        // Security: Validate room name
-        if (!/^[a-zA-Z0-9_-]+$/.test(room)) {
-            alert("Invalid room specified.");
-            window.location.href = "home.html";
-            throw new Error("Invalid room name");
-        }
-
-        const messagesRef = ref(db, `chats/${room}`);
-        const typingRef = ref(db, `typing/${room}/${userId}`);
-
-        // Typing detection with security
+        // Typing detection
         let typingTimer;
         let isTyping = false;
 
@@ -488,17 +523,21 @@
                     name: userName,
                     timestamp: Date.now(),
                     userId: userId
+                }).catch(error => {
+                    console.warn("Could not set typing indicator:", error);
                 });
             }
 
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
                 isTyping = false;
-                set(typingRef, null);
+                set(typingRef, null).catch(error => {
+                    console.warn("Could not clear typing indicator:", error);
+                });
             }, 2000);
         });
 
-        // Listen for typing indicators with security
+        // Listen for typing indicators
         onValue(ref(db, `typing/${room}`), (snapshot) => {
             const typingData = snapshot.val();
             let activeTyping = false;
@@ -508,7 +547,6 @@
                 Object.keys(typingData).forEach(typingUserId => {
                     if (typingUserId !== userId) {
                         const typingInfo = typingData[typingUserId];
-                        // Security: Validate typing data and check timestamp
                         if (typingInfo && typingInfo.timestamp && 
                             (Date.now() - typingInfo.timestamp < 3000)) {
                             activeTyping = true;
@@ -521,24 +559,25 @@
             if (activeTyping) {
                 typingUserEl.textContent = typingName;
                 typingIndicator.style.display = 'flex';
-                // Auto-hide after 3 seconds as fallback
                 setTimeout(() => {
                     typingIndicator.style.display = 'none';
                 }, 3000);
             } else {
                 typingIndicator.style.display = 'none';
             }
+        }, (error) => {
+            console.warn("Error listening to typing indicators:", error);
         });
 
-        // Load messages with security checks
+        // Load messages
         onValue(messagesRef, (snapshot) => {
+            errorMessage.style.display = 'none';
             chatBox.innerHTML = '';
             chatBox.appendChild(welcomeMessage);
             
             const messages = [];
             snapshot.forEach((child) => {
                 const msg = child.val();
-                // Security: Validate message structure
                 if (msg && msg.text && msg.name && msg.uid) {
                     messages.push({
                         ...msg,
@@ -561,7 +600,6 @@
                     hour: '2-digit', minute: '2-digit' 
                 });
 
-                // Security: Sanitize all user-generated content
                 const safeName = sanitizeInput(msg.name);
                 const safeText = sanitizeInput(msg.text);
 
@@ -577,9 +615,13 @@
             });
 
             chatBox.scrollTop = chatBox.scrollHeight;
+        }, (error) => {
+            console.error("Error loading messages:", error);
+            errorMessage.style.display = 'block';
+            errorMessage.textContent = "Unable to load messages. Please check your connection.";
         });
 
-        // Send message with security
+        // Send message
         async function sendMessage() {
             const rawText = messageInput.value.trim();
             
@@ -588,24 +630,18 @@
                 return;
             }
 
-            // Security: Sanitize message
             const sanitizedText = sanitizeInput(rawText);
 
             sendingIndicator.style.display = 'flex';
             sendBtn.disabled = true;
 
             try {
-                // Get user profile for additional context
-                const userSnapshot = await get(ref(db, `users/${userId}`));
-                const userData = userSnapshot.val();
-
                 await push(messagesRef, {
                     uid: userId,
                     name: userName,
                     text: sanitizedText,
                     time: Date.now(),
-                    timestamp: serverTimestamp(),
-                    userAgent: navigator.userAgent.substring(0, 100) // For moderation
+                    timestamp: serverTimestamp()
                 });
 
                 messageInput.value = "";
@@ -617,7 +653,7 @@
 
             } catch (error) {
                 console.error("Failed to send message:", error);
-                alert("Failed to send message. Please try again.");
+                alert("Failed to send message. Please check your connection and try again.");
             } finally {
                 sendingIndicator.style.display = 'none';
                 sendBtn.disabled = false;
@@ -635,15 +671,11 @@
             }
         });
 
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            set(typingRef, null);
-            // Remove all Firebase listeners
-            off(messagesRef);
-            off(ref(db, `typing/${room}`));
+        // Navigation handlers
+        homeBtn.addEventListener('click', () => {
+            window.location.href = 'home.html';
         });
 
-        // Settings handler
         settingsBtn.addEventListener('click', () => {
             window.location.href = 'settings.html';
         });
@@ -654,46 +686,48 @@
                 // Clear typing status
                 set(typingRef, null);
                 
-                // Clear local storage (except preferences)
-                const preferences = localStorage.getItem('user_preferences');
+                // Update user status to offline
+                update(userStatusRef, {
+                    online: false,
+                    lastSeen: Date.now()
+                }).catch(console.warn);
+                
+                // Clear local storage
                 localStorage.clear();
-                if (preferences) {
-                    localStorage.setItem('user_preferences', preferences);
-                }
                 
                 window.location.href = 'signin.html';
             }
         });
 
-        // Call button handler (simplified for security)
+        // Call button handler
         callBtn.addEventListener('click', () => {
             if (room === "global") {
-                alert("Voice calls are only available in private conversations for security reasons.");
+                alert("Voice calls are only available in private conversations.");
                 return;
             }
             
             if (!otherUserId) {
-                alert("Unable to initiate call. Please select a specific user to call.");
+                alert("Please select a specific user to call.");
                 return;
             }
             
-            // For security, we'll redirect to a dedicated calling page
             window.location.href = `call.html?user=${otherUserId}&room=${room}`;
         });
 
-        // Security: Periodic cleanup of old typing indicators
-        setInterval(() => {
-            if (isTyping) {
-                const currentTime = Date.now();
-                get(typingRef).then((snapshot) => {
-                    const data = snapshot.val();
-                    if (data && currentTime - data.timestamp > 10000) {
-                        set(typingRef, null);
-                        isTyping = false;
-                    }
-                });
-            }
-        }, 5000);
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            set(typingRef, null);
+            update(userStatusRef, {
+                online: false,
+                lastSeen: Date.now()
+            }).catch(console.warn);
+        });
+
+        // Initialize
+        updateUserStatus();
+        messageInput.focus();
+
+        console.log("💬 Chat initialized for user:", userName, "in room:", room);
 
     </script>
 </body>
