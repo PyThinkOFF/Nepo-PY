@@ -82,6 +82,19 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    .demo-accounts {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 12px;
+      text-align: left;
+    }
+    .demo-title {
+      color: #00aaff;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -103,6 +116,13 @@
 
   <p id="status"></p>
 
+  <div class="demo-accounts">
+    <div class="demo-title">Demo Accounts (Click to fill):</div>
+    <div onclick="fillDemoAccount('test@nepochat.com', 'test123')">📧 test@nepochat.com | 🔑 test123</div>
+    <div onclick="fillDemoAccount('user@nepochat.com', 'user123')">📧 user@nepochat.com | 🔑 user123</div>
+    <div onclick="fillDemoAccount('demo@nepochat.com', 'demo123')">📧 demo@nepochat.com | 🔑 demo123</div>
+  </div>
+
   <div id="suspendModal">
     <p id="suspendMessage"></p>
     <div>
@@ -114,7 +134,7 @@
   <!-- Firebase Modular SDK (v12) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -134,27 +154,7 @@
     const status = document.getElementById("status");
     const loading = document.getElementById("loading");
 
-    // Check if user is already logged in
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // User is signed in, redirect to home
-        try {
-          const userRef = ref(db, "users/" + user.uid);
-          const snap = await get(userRef);
-          const userData = snap.val();
-          
-          localStorage.setItem("nepo_user_id", user.uid);
-          localStorage.setItem("nepo_user_email", user.email);
-          localStorage.setItem("nepo_profile_name", userData?.displayName || "User");
-          
-          window.location.href = "home.html";
-        } catch (error) {
-          console.error("Error checking user data:", error);
-        }
-      } else {
-        status.textContent = "Please sign in to continue.";
-      }
-    });
+    // 🔄 REMOVED AUTO-LOGIN - User must manually login every time
 
     // Login function
     document.getElementById("loginBtn").onclick = async () => {
@@ -168,6 +168,7 @@
 
       // Show loading
       document.getElementById("loginBtn").disabled = true;
+      document.getElementById("createBtn").disabled = true;
       loading.style.display = "block";
       status.textContent = "";
 
@@ -261,6 +262,7 @@
       }
 
       // Show loading
+      document.getElementById("loginBtn").disabled = true;
       document.getElementById("createBtn").disabled = true;
       loading.style.display = "block";
       status.textContent = "";
@@ -327,6 +329,13 @@
       }
     });
 
+    // Fill demo account function
+    window.fillDemoAccount = (email, password) => {
+      document.getElementById("loginEmail").value = email;
+      document.getElementById("loginPassword").value = password;
+      status.textContent = "💡 Demo account filled! Click Login to continue.";
+    };
+
     function resetUI() {
       document.getElementById("loginBtn").disabled = false;
       document.getElementById("createBtn").disabled = false;
@@ -336,7 +345,12 @@
     // Auto-focus on email field
     document.getElementById("loginEmail").focus();
 
-    console.log("🔐 Nepo Chat Login Page Loaded");
+    // Clear any existing sessions on page load
+    localStorage.removeItem("nepo_user_id");
+    localStorage.removeItem("nepo_user_email");
+    localStorage.removeItem("nepo_profile_name");
+
+    console.log("🔐 Nepo Chat Login Page Loaded - Manual Login Required");
 
   </script>
 </body>
