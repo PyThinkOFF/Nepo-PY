@@ -11,152 +11,128 @@
       background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
       color: #fff;
       display: flex;
-      flex-direction: row;
-      height: 100vh;
-      overflow: hidden;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    .sidebar {
-      width: 280px;
+    
+    /* Header with profile info */
+    .header {
       background: rgba(27, 27, 27, 0.95);
       backdrop-filter: blur(6px);
-      padding: 20px;
+      padding: 15px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+    
+    .profile-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex: 1;
+    }
+    
     .profile-pic {
-      width: 100px;
-      height: 100px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
-      border: 3px solid #00aaff;
+      border: 2px solid #00aaff;
       object-fit: cover;
-      margin-bottom: 15px;
       display: none;
     }
-    .balance {
-      font-size: 18px;
-      color: #00ffcc;
-      margin-bottom: 15px;
-      font-weight: bold;
-      text-shadow: 0 0 8px #00ffc8;
-      width: 100%;
-      text-align: center;
-      animation: fadeSlide 1s ease;
+    
+    .user-info {
+      flex: 1;
     }
+    
     .username {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: #00ccff;
-      text-align: center;
-      animation: fadeSlide 1s ease;
-      margin-bottom: 10px;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 5px;
     }
+    
     .userid {
-      font-size: 13px;
+      font-size: 12px;
       color: #aaa;
-      margin: 10px 0 30px;
-      text-align: center;
+      margin-top: 2px;
     }
-    .menu {
-      width: 100%;
+    
+    .balance {
+      font-size: 16px;
+      color: #00ffcc;
+      font-weight: bold;
+      text-shadow: 0 0 8px #00ffc8;
+      text-align: right;
+      animation: fadeSlide 1s ease;
+    }
+    
+    /* Navigation Menu */
+    .nav-menu {
       display: flex;
-      flex-direction: column;
+      overflow-x: auto;
+      padding: 10px 15px;
       gap: 10px;
+      background: rgba(20, 20, 20, 0.9);
+      border-bottom: 1px solid #333;
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
     }
-    .menu button {
-      width: 100%;
+    
+    .nav-menu::-webkit-scrollbar {
+      display: none; /* Chrome, Safari and Opera */
+    }
+    
+    .nav-menu button {
       background: #292929;
       color: white;
       border: none;
-      padding: 12px;
+      padding: 12px 15px;
       border-radius: 6px;
-      text-align: left;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       transition: background 0.3s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .menu button:hover { background: #00aaff; }
-    .chat-area {
+    
+    .nav-menu button:hover { 
+      background: #00aaff; 
+    }
+    
+    /* Main Content Area */
+    .main-content {
       flex: 1;
-      background: transparent;
+      padding: 20px 15px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 40px;
-      animation: fadeIn 1s ease;
-      text-align: center;
+      gap: 15px;
     }
-    .chat-area button {
-      margin: 20px;
-      padding: 15px 30px;
-      font-size: 18px;
-      border-radius: 8px;
+    
+    .action-button {
+      padding: 18px;
+      font-size: 16px;
+      border-radius: 10px;
       background: #00aaff;
       color: white;
       border: none;
       cursor: pointer;
       transition: background 0.3s ease;
+      text-align: center;
+      width: 100%;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
-    .chat-area button:hover { background: #008fcc; }
-
-    @keyframes fadeSlide {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    
+    .action-button:hover { 
+      background: #008fcc; 
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    /* 🔴 Verified Badge */
-    .verified-badge-danger {
-      position: relative;
-      width: 22px;
-      height: 22px;
-      display: inline-block;
-      vertical-align: middle;
-      border-radius: 50%;
-      overflow: hidden;
-      background-color: #D32F2F;
-      box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
-    }
-    .verified-badge-danger svg { width: 100%; height: 100%; display: block; }
-
-    /* 🟡 Pro Badge */
-    .pro-badge {
-      position: relative;
-      width: 22px;
-      height: 22px;
-      display: inline-block;
-      vertical-align: middle;
-      border-radius: 50%;
-      overflow: hidden;
-      background-color: #FFD700;
-      box-shadow: 0 0 10px #FFD700;
-    }
-    .pro-badge svg { width: 100%; height: 100%; display: block; }
-
-    /* Shine animation */
-    .shine {
-      position: absolute;
-      top: -150%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
-      transform: rotate(25deg);
-      animation: shineMove 2.5s linear infinite;
-      pointer-events: none;
-      z-index: 2;
-    }
-    @keyframes shineMove {
-      0% { transform: translateX(-100%) rotate(25deg); }
-      100% { transform: translateX(100%) rotate(25deg); }
-    }
-
+    
     /* Redeem Overlay Styles */
     #redeemOverlay {
       position: fixed;
@@ -170,27 +146,29 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      padding: 20px;
     }
 
     #redeemBox {
       background: #111;
-      padding: 30px;
+      padding: 25px;
       border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       box-shadow: 0 0 20px #00ffcc;
-      width: 300px;
-      max-width: 90%;
+      width: 100%;
+      max-width: 320px;
     }
 
     #redeemBox h3 {
       color: #00ffcc;
       margin-bottom: 20px;
+      text-align: center;
     }
 
     #codeInput {
-      padding: 12px;
+      padding: 15px;
       font-size: 16px;
       border-radius: 6px;
       border: none;
@@ -206,6 +184,7 @@
       font-weight: bold;
       min-height: 24px;
       text-align: center;
+      font-size: 14px;
     }
 
     .success { color: #00ffcc; }
@@ -216,42 +195,236 @@
       animation: successPulse 0.5s ease-in-out 3;
     }
 
+    /* Badge Styles */
+    .verified-badge-danger {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #D32F2F;
+      box-shadow: 0 0 8px rgba(211, 47, 47, 0.7);
+    }
+    
+    .verified-badge-danger svg { 
+      width: 100%; 
+      height: 100%; 
+      display: block; 
+    }
+
+    .pro-badge {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #FFD700;
+      box-shadow: 0 0 10px #FFD700;
+    }
+    
+    .pro-badge svg { 
+      width: 100%; 
+      height: 100%; 
+      display: block; 
+    }
+
+    /* Shine animation */
+    .shine {
+      position: absolute;
+      top: -150%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
+      transform: rotate(25deg);
+      animation: shineMove 2.5s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    /* Animations */
+    @keyframes fadeSlide {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes fadeIn { 
+      from { opacity: 0; } 
+      to { opacity: 1; } 
+    }
+    
+    @keyframes shineMove {
+      0% { transform: translateX(-100%) rotate(25deg); }
+      100% { transform: translateX(100%) rotate(25deg); }
+    }
+    
     @keyframes successPulse {
       0% { transform: scale(1); }
       50% { transform: scale(1.05); }
       100% { transform: scale(1); }
     }
-
-    @media (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar { width: 100%; flex-direction: row; justify-content: space-around; padding: 10px; height: auto; }
-      .menu { flex-direction: row; gap: 10px; }
-      .menu button { font-size: 14px; padding: 10px; }
-      .chat-area { padding: 20px; }
+    
+    /* Desktop styles - for larger screens */
+    @media (min-width: 769px) {
+      body {
+        flex-direction: row;
+        height: 100vh;
+      }
+      
+      .header {
+        display: none;
+      }
+      
+      .nav-menu {
+        display: none;
+      }
+      
+      .sidebar {
+        width: 280px;
+        background: rgba(27, 27, 27, 0.95);
+        backdrop-filter: blur(6px);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 4px 0 15px rgba(0,0,0,0.4);
+      }
+      
+      .profile-pic {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid #00aaff;
+        object-fit: cover;
+        margin-bottom: 15px;
+        display: none;
+      }
+      
+      .balance {
+        font-size: 18px;
+        margin-bottom: 15px;
+        width: 100%;
+        text-align: center;
+      }
+      
+      .username {
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+      
+      .userid {
+        font-size: 13px;
+        margin: 10px 0 30px;
+        text-align: center;
+      }
+      
+      .menu {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .menu button {
+        width: 100%;
+        background: #292929;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        text-align: left;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+      
+      .menu button:hover { 
+        background: #00aaff; 
+      }
+      
+      .main-content {
+        flex: 1;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        animation: fadeIn 1s ease;
+        text-align: center;
+      }
+      
+      .action-button {
+        margin: 20px;
+        padding: 15px 30px;
+        font-size: 18px;
+        border-radius: 8px;
+        background: #00aaff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        width: auto;
+      }
+      
+      .verified-badge-danger, .pro-badge {
+        width: 22px;
+        height: 22px;
+      }
     }
   </style>
 </head>
 <body>
 
+  <!-- Mobile Header -->
+  <div class="header">
+    <div class="profile-section">
+      <img id="avatar" class="profile-pic" alt="Profile Photo" />
+      <div class="user-info">
+        <div id="username" class="username">Welcome!</div>
+        <div id="userid" class="userid">Your ID: #</div>
+      </div>
+    </div>
+    <div id="balance" class="balance">₦0</div>
+  </div>
+
+  <!-- Mobile Navigation Menu -->
+  <div class="nav-menu">
+    <button onclick="window.location.href='option.html'">💰 Add Money</button>
+    <button onclick="showRedeemBox()">🎫 Redeem Code</button>
+    <button onclick="window.location.href='friend.html'">👥 Friends</button>
+    <button onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
+    <button onclick="window.location.href='reels.html'">🎬 Watch Reels</button>
+    <button onclick="window.location.href='events.html'">🎯 Events</button>
+    <button onclick="window.location.href='menu.html'">☰ Menu</button>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <button class="action-button" onclick="window.location.href='friend.html'">👥 Friends</button>
+    <button class="action-button" onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
+    <button class="action-button" onclick="window.location.href='reels.html'">🎬 Watch Reels</button>
+    <button class="action-button" onclick="window.location.href='events.html'">🎯 Events</button>
+  </div>
+
+  <!-- Desktop Sidebar (hidden on mobile) -->
   <div class="sidebar">
-    <img id="avatar" class="profile-pic" alt="Profile Photo" />
-    <div id="balance" class="balance">Balance: ₦0</div>
-    <div id="username" class="username">Welcome!</div>
-    <div id="userid" class="userid">Your ID: #</div>
+    <img id="desktop-avatar" class="profile-pic" alt="Profile Photo" />
+    <div id="desktop-balance" class="balance">Balance: ₦0</div>
+    <div id="desktop-username" class="username">Welcome!</div>
+    <div id="desktop-userid" class="userid">Your ID: #</div>
 
     <div class="menu">
       <button onclick="window.location.href='option.html'">💰 Add Money</button>
       <button onclick="showRedeemBox()">🎫 Redeem Code</button>
       <button onclick="window.location.href='menu.html'">☰ Menu</button>
-      <button id="logoutBtn">Logout</button>
+      <button id="desktop-logoutBtn">Logout</button>
     </div>
-  </div>
-
-  <div class="chat-area">
-    <button onclick="window.location.href='friend.html'">👥 Friends</button>
-    <button onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
-    <button onclick="window.location.href='reels.html'">🎬 Watch Reels</button>
-    <button onclick="window.location.href='events.html'">🎯 Events</button>
   </div>
 
   <!-- Redeem Overlay -->
@@ -314,9 +487,11 @@
       }
     });
 
-    // Show username
+    // Show username on mobile and desktop
     const usernameEl = document.getElementById("username");
-    usernameEl.textContent = `Welcome, ${name}`;
+    const desktopUsernameEl = document.getElementById("desktop-username");
+    usernameEl.textContent = name;
+    desktopUsernameEl.textContent = `Welcome, ${name}`;
 
     // ✅ Badge check
     const verifiedRef = ref(db, `verifiedUsers/${userId}`);
@@ -332,7 +507,8 @@
           </svg>
           <span class="shine"></span>
         `;
-        usernameEl.appendChild(badge);
+        usernameEl.appendChild(badge.cloneNode(true));
+        desktopUsernameEl.appendChild(badge);
       }
     });
 
@@ -349,28 +525,40 @@
           </svg>
           <span class="shine"></span>
         `;
-        usernameEl.appendChild(proBadge);
+        usernameEl.appendChild(proBadge.cloneNode(true));
+        desktopUsernameEl.appendChild(proBadge);
       }
     });
 
     document.getElementById("userid").textContent = `Your ID: ${userId}`;
+    document.getElementById("desktop-userid").textContent = `Your ID: ${userId}`;
 
     if (img) {
       const avatar = document.getElementById("avatar");
+      const desktopAvatar = document.getElementById("desktop-avatar");
       avatar.src = img;
       avatar.style.display = "block";
+      desktopAvatar.src = img;
+      desktopAvatar.style.display = "block";
     }
 
     // Balance listener
     const balanceElem = document.getElementById("balance");
+    const desktopBalanceElem = document.getElementById("desktop-balance");
     const balanceRef = ref(db, `users/${userId}/balance`);
     onValue(balanceRef, snapshot => {
       const balance = snapshot.val() ?? 0;
-      balanceElem.textContent = `Balance: ₦${balance}`;
+      balanceElem.textContent = `₦${balance}`;
+      desktopBalanceElem.textContent = `Balance: ₦${balance}`;
     });
 
     // Logout
     document.getElementById("logoutBtn").onclick = () => {
+      localStorage.clear();
+      window.location.href = "signin.html";
+    };
+    
+    document.getElementById("desktop-logoutBtn").onclick = () => {
       localStorage.clear();
       window.location.href = "signin.html";
     };
@@ -416,7 +604,8 @@
     async function redeemCode() {
       const codeInput = document.getElementById('codeInput');
       const resultEl = document.getElementById('redeemResult');
-      const balanceElem = document.getElementById('balance');
+      const balanceElem = document.getElementById("balance");
+      const desktopBalanceElem = document.getElementById("desktop-balance");
       
       const code = codeInput.value.trim().toUpperCase().replace(/-/g, '');
       
@@ -466,10 +655,12 @@
         resultEl.textContent = `Success! ₦${codeData.amount} added to your balance!`;
         resultEl.className = 'success';
         balanceElem.classList.add('success-animation');
+        desktopBalanceElem.classList.add('success-animation');
         
         // Remove animation after it completes
         setTimeout(() => {
           balanceElem.classList.remove('success-animation');
+          desktopBalanceElem.classList.remove('success-animation');
         }, 1500);
 
         // Clear input
