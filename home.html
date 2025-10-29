@@ -275,11 +275,7 @@
         height: 100vh;
       }
       
-      .header {
-        display: none;
-      }
-      
-      .nav-menu {
+      .header, .nav-menu {
         display: none;
       }
       
@@ -392,24 +388,16 @@
     <div id="balance" class="balance">₦0</div>
   </div>
 
-  <!-- Mobile Navigation Menu -->
-  <div class="nav-menu">
-    <button onclick="window.location.href='option.html'">💰 Add Money</button>
-    <button onclick="showRedeemBox()">🎫 Redeem Code</button>
-    <button onclick="window.location.href='friend.html'">👥 Friends</button>
-    <button onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
-    <button onclick="window.location.href='reels.html'">🎬 Watch Reels</button>
-    <button onclick="window.location.href='events.html'">🎯 Events</button>
-    <button onclick="window.location.href='menu.html'">☰ Menu</button>
-    <button id="logoutBtn">Logout</button>
-  </div>
-
   <!-- Main Content Area -->
   <div class="main-content">
     <button class="action-button" onclick="window.location.href='friend.html'">👥 Friends</button>
     <button class="action-button" onclick="window.location.href='chat.html?room=global'">🌐 Global Chat</button>
     <button class="action-button" onclick="window.location.href='reels.html'">🎬 Watch Reels</button>
     <button class="action-button" onclick="window.location.href='events.html'">🎯 Events</button>
+    <button class="action-button" onclick="window.location.href='option.html'">💰 Add Money</button>
+    <button class="action-button" onclick="showRedeemBox()">🎫 Redeem Code</button>
+    <button class="action-button" onclick="window.location.href='menu.html'">☰ Menu</button>
+    <button class="action-button" id="logoutBtn">Logout</button>
   </div>
 
   <!-- Desktop Sidebar (hidden on mobile) -->
