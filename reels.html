@@ -49,16 +49,21 @@
       object-fit: cover;
     }
     
-    /* Reels Feed */
+    /* Reels Feed with Smooth Scroll */
     .reels-feed {
       flex: 1;
       position: relative;
+      scroll-snap-type: y mandatory;
+      overflow-y: auto;
+      height: calc(100vh - 70px);
     }
     
     .reel-item {
       position: relative;
       height: 100vh;
       background: #000;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
     }
     
     .reel-video {
@@ -99,6 +104,9 @@
     .username {
       font-weight: bold;
       font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
     
     .video-caption {
@@ -141,6 +149,11 @@
       font-size: 20px;
       background: rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(10px);
+      transition: transform 0.2s ease;
+    }
+    
+    .action-btn:hover .action-icon {
+      transform: scale(1.1);
     }
     
     .like-btn.active .action-icon {
@@ -172,6 +185,11 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      transition: transform 0.2s ease;
+    }
+    
+    .upload-btn:hover {
+      transform: scale(1.05);
     }
     
     /* Upload Modal */
@@ -227,6 +245,11 @@
       border-radius: 8px;
       cursor: pointer;
       margin-top: 10px;
+      transition: background 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+      background: #0088cc;
     }
     
     /* Loading */
@@ -242,6 +265,221 @@
       text-align: center;
       padding: 50px 20px;
       color: #666;
+    }
+
+    /* File Info */
+    .file-info {
+      text-align: center;
+      margin: 10px 0;
+      font-size: 12px;
+      color: #00aaff;
+    }
+
+    /* YouTube Style Comments Modal */
+    .comments-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .comments-modal.active {
+      display: flex;
+    }
+    
+    .comments-header {
+      padding: 15px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .comments-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .comment-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .comment-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #00aaff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    
+    .comment-content {
+      flex: 1;
+    }
+    
+    .comment-author {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .comment-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #e0e0e0;
+    }
+    
+    .comment-time {
+      font-size: 12px;
+      color: #888;
+      margin-top: 4px;
+    }
+    
+    .add-comment-section {
+      padding: 15px;
+      background: #1a1a1a;
+      border-top: 1px solid #333;
+    }
+    
+    .comment-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #444;
+      border-radius: 24px;
+      background: #2a2a2a;
+      color: white;
+      font-size: 14px;
+    }
+    
+    .comment-input:focus {
+      outline: none;
+      border-color: #00aaff;
+    }
+    
+    .send-comment-btn {
+      position: absolute;
+      right: 25px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #00aaff;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* Badge Styles */
+    .verified-badge-danger {
+      position: relative;
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #D32F2F;
+      box-shadow: 0 0 6px rgba(211, 47, 47, 0.7);
+    }
+    
+    .verified-badge-danger svg { 
+      width: 100%; 
+      height: 100%; 
+      display: block; 
+    }
+
+    .pro-badge {
+      position: relative;
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #FFD700;
+      box-shadow: 0 0 8px #FFD700;
+    }
+    
+    .pro-badge svg { 
+      width: 100%; 
+      height: 100%; 
+      display: block; 
+    }
+
+    /* Shine animation */
+    .shine {
+      position: absolute;
+      top: -150%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(120deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 70%);
+      transform: rotate(25deg);
+      animation: shineMove 2.5s linear infinite;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Animations */
+    @keyframes shineMove {
+      0% { transform: translateX(-100%) rotate(25deg); }
+      100% { transform: translateX(100%) rotate(25deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Scrollbar Styling */
+    .reels-feed::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .reels-feed::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .reels-feed::-webkit-scrollbar-thumb {
+      background: #00aaff;
+      border-radius: 2px;
+    }
+
+    .comments-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .comments-content::-webkit-scrollbar-track {
+      background: #1a1a1a;
+    }
+
+    .comments-content::-webkit-scrollbar-thumb {
+      background: #00aaff;
+      border-radius: 3px;
     }
   </style>
 </head>
@@ -280,12 +518,30 @@
   <div class="upload-modal" id="uploadModal">
     <div class="upload-content">
       <h3 style="text-align: center; margin-bottom: 20px;">Upload Reel</h3>
+      <div id="fileInfo" class="file-info"></div>
       <div class="form-group">
         <input type="text" id="reelCaption" class="form-input" placeholder="Add a caption..." maxlength="100">
       </div>
       <button class="submit-btn" onclick="uploadReel()">Upload to Cloudinary</button>
       <button class="submit-btn" onclick="closeUploadModal()" style="background: #666; margin-top: 10px;">Cancel</button>
       <div id="uploadProgress" style="text-align: center; margin-top: 15px; color: #00aaff;"></div>
+    </div>
+  </div>
+
+  <!-- YouTube Style Comments Modal -->
+  <div class="comments-modal" id="commentsModal">
+    <div class="comments-header">
+      <h3>Comments</h3>
+      <button onclick="closeComments()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+    </div>
+    <div class="comments-content" id="commentsContent">
+      <!-- Comments will be loaded here -->
+    </div>
+    <div class="add-comment-section">
+      <div style="position: relative;">
+        <input type="text" id="commentInput" class="comment-input" placeholder="Add a comment..." maxlength="500">
+        <button class="send-comment-btn" onclick="postComment()">Post</button>
+      </div>
     </div>
   </div>
 
@@ -311,7 +567,7 @@
   const CLOUDINARY_CLOUD_NAME = "dweisb7pg";
   const CLOUDINARY_UPLOAD_PRESET = "REELS_NEPOCHAT";
 
-  // Get user data from localStorage (from your home.html)
+  // Get user data from localStorage
   const currentUser = {
     id: localStorage.getItem("nepo_user_id"),
     name: localStorage.getItem("nepo_profile_name") || "User",
@@ -330,16 +586,22 @@
   }
 
   let selectedFile = null;
+  let currentReelId = null;
 
-  // File input handler
+  // File input handler with 500MB limit
   document.getElementById("videoInput").addEventListener("change", function(e) {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) {
-        alert("File too large! Please select a video under 100MB.");
+      // 500MB file size limit
+      const maxSize = 500 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert(`❌ File too large! Maximum size is 500MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB`);
+        this.value = '';
         return;
       }
+      
       selectedFile = file;
+      document.getElementById("fileInfo").textContent = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
       document.getElementById("uploadModal").classList.add("active");
     }
   });
@@ -350,6 +612,7 @@
     selectedFile = null;
     document.getElementById("reelCaption").value = "";
     document.getElementById("uploadProgress").textContent = "";
+    document.getElementById("fileInfo").textContent = "";
   };
 
   // Upload to Cloudinary and save to Realtime DB
@@ -455,6 +718,34 @@
     });
   }
 
+  // Create badge element
+  function createBadge(type) {
+    const badge = document.createElement("span");
+    
+    if (type === 'verified') {
+      badge.classList.add("verified-badge-danger");
+      badge.title = "Verified";
+      badge.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="12" fill="none" />
+          <path d="M7.5 12.5L10 15L16.5 8.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="shine"></span>
+      `;
+    } else if (type === 'pro') {
+      badge.classList.add("pro-badge");
+      badge.title = "Pro Badge";
+      badge.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L15 8H21L17 12L19 18L12 15L5 18L7 12L3 8H9L12 2Z"/>
+        </svg>
+        <span class="shine"></span>
+      `;
+    }
+    
+    return badge;
+  }
+
   // Render reels to feed
   function renderReels(reels) {
     const reelsFeed = document.getElementById("reelsFeed");
@@ -473,7 +764,7 @@
       const isLiked = reel.likes_users && reel.likes_users[currentUser.id];
       
       const reelElement = document.createElement('div');
-      reelElement.className = 'reel-item';
+      reelElement.className = 'reel-item fade-in';
       reelElement.innerHTML = `
         <video class="reel-video" controls muted playsinline>
           <source src="${reel.video_url}" type="video/mp4">
@@ -504,14 +795,17 @@
             <div class="action-icon">📤</div>
             <span>Share</span>
           </button>
-          <button class="action-btn" onclick="addComment('${reel.id}')">
+          <button class="action-btn" onclick="openComments('${reel.id}')">
             <div class="action-icon">💬</div>
-            <span>Comment</span>
+            <span>${reel.comments ? Object.keys(reel.comments).length : 0}</span>
           </button>
         </div>
       `;
       
       reelsFeed.appendChild(reelElement);
+
+      // Add badges to username
+      addBadgesToUsername(reel.user_id, reelElement);
 
       // Auto-play/pause on click
       const video = reelElement.querySelector('video');
@@ -523,6 +817,25 @@
         }
       });
     });
+  }
+
+  // Add verification badges to username
+  async function addBadgesToUsername(userId, reelElement) {
+    const usernameElement = reelElement.querySelector('.username');
+    
+    // Check verified badge
+    const verifiedRef = ref(db, `verifiedUsers/${userId}`);
+    const verifiedSnapshot = await get(verifiedRef);
+    if (verifiedSnapshot.exists() && verifiedSnapshot.val() === true) {
+      usernameElement.appendChild(createBadge('verified'));
+    }
+    
+    // Check pro badge
+    const proBadgeRef = ref(db, `users/${userId}/proBadge`);
+    const proSnapshot = await get(proBadgeRef);
+    if (proSnapshot.exists() && proSnapshot.val() === true) {
+      usernameElement.appendChild(createBadge('pro'));
+    }
   }
 
   // Toggle like
@@ -567,23 +880,135 @@
     }
   };
 
-  // Add comment
-  window.addComment = async function(reelId) {
-    const comment = prompt('Add your comment:');
-    if (comment && comment.trim()) {
-      const commentId = push(ref(db, `reels/${reelId}/comments`)).key;
-      const commentData = {
-        id: commentId,
-        user_id: currentUser.id,
-        user_name: currentUser.name,
-        text: comment.trim(),
-        timestamp: Date.now()
-      };
-
-      await set(ref(db, `reels/${reelId}/comments/${commentId}`), commentData);
-      alert('💬 Comment added!');
-    }
+  // Open comments modal (YouTube style)
+  window.openComments = async function(reelId) {
+    currentReelId = reelId;
+    document.getElementById("commentsModal").classList.add("active");
+    document.getElementById("commentInput").value = "";
+    await loadComments(reelId);
   };
+
+  // Close comments modal
+  window.closeComments = function() {
+    document.getElementById("commentsModal").classList.remove("active");
+    currentReelId = null;
+  };
+
+  // Load comments for a reel
+  async function loadComments(reelId) {
+    const commentsContent = document.getElementById("commentsContent");
+    commentsContent.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Loading comments...</div>';
+
+    const commentsRef = ref(db, `reels/${reelId}/comments`);
+    
+    onValue(commentsRef, (snapshot) => {
+      const commentsData = snapshot.val();
+      commentsContent.innerHTML = '';
+
+      if (!commentsData) {
+        commentsContent.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">No comments yet. Be the first to comment!</div>';
+        return;
+      }
+
+      // Convert to array and sort by timestamp
+      const commentsArray = Object.values(commentsData).sort((a, b) => a.timestamp - b.timestamp);
+      
+      commentsArray.forEach(async (comment) => {
+        const commentElement = document.createElement('div');
+        commentElement.className = 'comment-item fade-in';
+        
+        const timeAgo = getTimeAgo(comment.timestamp);
+        
+        commentElement.innerHTML = `
+          <div class="comment-avatar">
+            ${comment.user_name ? comment.user_name.charAt(0).toUpperCase() : 'U'}
+          </div>
+          <div class="comment-content">
+            <div class="comment-author">@${comment.user_name || 'user'}</div>
+            <div class="comment-text">${comment.text}</div>
+            <div class="comment-time">${timeAgo}</div>
+          </div>
+        `;
+        
+        commentsContent.appendChild(commentElement);
+        
+        // Add badges to comment author
+        await addBadgesToComment(comment.user_id, commentElement);
+      });
+    });
+  }
+
+  // Add badges to comment author
+  async function addBadgesToComment(userId, commentElement) {
+    const authorElement = commentElement.querySelector('.comment-author');
+    
+    // Check verified badge
+    const verifiedRef = ref(db, `verifiedUsers/${userId}`);
+    const verifiedSnapshot = await get(verifiedRef);
+    if (verifiedSnapshot.exists() && verifiedSnapshot.val() === true) {
+      authorElement.appendChild(createBadge('verified'));
+    }
+    
+    // Check pro badge
+    const proBadgeRef = ref(db, `users/${userId}/proBadge`);
+    const proSnapshot = await get(proBadgeRef);
+    if (proSnapshot.exists() && proSnapshot.val() === true) {
+      authorElement.appendChild(createBadge('pro'));
+    }
+  }
+
+  // Post new comment
+  window.postComment = async function() {
+    if (!currentReelId || !currentUser.id) return;
+
+    const commentInput = document.getElementById("commentInput");
+    const commentText = commentInput.value.trim();
+
+    if (!commentText) {
+      alert("Please enter a comment!");
+      return;
+    }
+
+    const commentId = push(ref(db, `reels/${currentReelId}/comments`)).key;
+    const commentData = {
+      id: commentId,
+      user_id: currentUser.id,
+      user_name: currentUser.name,
+      user_avatar: currentUser.avatar,
+      text: commentText,
+      timestamp: Date.now()
+    };
+
+    await set(ref(db, `reels/${currentReelId}/comments/${commentId}`), commentData);
+    commentInput.value = "";
+    
+    // Scroll to bottom of comments
+    const commentsContent = document.getElementById("commentsContent");
+    commentsContent.scrollTop = commentsContent.scrollHeight;
+  };
+
+  // Time ago function
+  function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString();
+  }
+
+  // Enter key for comment input
+  document.getElementById("commentInput").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      postComment();
+    }
+  });
 
   // Initialize
   document.addEventListener('DOMContentLoaded', function() {
