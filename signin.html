@@ -5,124 +5,230 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Login - Nepo Chat</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
     body {
-      background: #121212;
-      color: white;
-      font-family: sans-serif;
+      height: 100vh;
+      background: radial-gradient(circle at top, #1a1a1a 0%, #000 100%);
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 40px;
+      color: #fff;
+      overflow: hidden;
     }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      border: none;
-      border-radius: 6px;
-      width: 80%;
-      max-width: 300px;
-      background: #2a2a2a;
-      color: white;
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: repeating-radial-gradient(circle, #00aaff10 0%, #00aaff05 5%, transparent 10%, transparent 20%);
+      animation: rotateBg 30s linear infinite;
+      z-index: 0;
     }
-    button {
-      background: #00aaff;
-      cursor: pointer;
+
+    @keyframes rotateBg {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
-    h2 {
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      position: relative;
+      z-index: 2;
+      animation: slideUp 0.8s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .login-card h2 {
+      font-size: 1.8rem;
+      color: #00aaff;
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px #00aaff;
+    }
+
+    .login-card h3 {
+      font-weight: 500;
       margin-bottom: 10px;
+      color: #bbb;
     }
-    .section {
-      margin-bottom: 30px;
+
+    input {
       width: 100%;
-      max-width: 350px;
-      border-top: 1px solid #333;
-      padding-top: 20px;
+      padding: 12px 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.3s ease;
     }
-    #suspendModal {
+
+    input:focus {
+      background: rgba(0, 170, 255, 0.15);
+      box-shadow: 0 0 8px #00aaff;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s ease;
+      color: #fff;
+    }
+
+    #loginBtn {
+      background: linear-gradient(90deg, #00aaff, #0077ff);
+      box-shadow: 0 0 10px #00aaff80;
+    }
+
+    #loginBtn:hover {
+      box-shadow: 0 0 20px #00aaffcc;
+      transform: translateY(-2px);
+    }
+
+    #createBtn {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #createBtn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    #status {
+      margin-top: 15px;
+      color: #ff6666;
+      font-size: 0.9rem;
+      min-height: 20px;
+    }
+
+    /* ===== Loading Overlay Animation ===== */
+    #loadingOverlay {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.9);
-      color: white;
       display: none;
       justify-content: center;
       align-items: center;
       flex-direction: column;
+      z-index: 10;
+      color: #00aaff;
       text-align: center;
-      padding: 20px;
     }
+
+    .glow-ring {
+      width: 80px;
+      height: 80px;
+      border: 5px solid rgba(0, 170, 255, 0.2);
+      border-top: 5px solid #00aaff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+      box-shadow: 0 0 20px #00aaff80;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 1.1rem;
+      animation: fade 1.5s ease-in-out infinite;
+    }
+
+    @keyframes fade {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 1; }
+    }
+
+    /* ===== Modal ===== */
+    #suspendModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 20;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
+
     #suspendModal button {
       margin: 10px;
-      padding: 8px 20px;
+      padding: 10px 20px;
+      border-radius: 8px;
       border: none;
-      border-radius: 5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.3s;
     }
+
     #okBtn {
       background: #00aaff;
+      color: #fff;
     }
+
     #helpBtn {
-      background: #555;
-      color: white;
+      background: #444;
+      color: #fff;
     }
-    .loading {
-      display: none;
-      text-align: center;
-      margin: 10px 0;
-    }
-    .spinner {
-      border: 3px solid #333;
-      border-top: 3px solid #00aaff;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .demo-accounts {
-      margin-top: 20px;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      font-size: 12px;
-      text-align: left;
-    }
-    .demo-title {
-      color: #00aaff;
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
+
+    #okBtn:hover { background: #0090e0; }
+    #helpBtn:hover { background: #666; }
   </style>
 </head>
 <body>
-
-  <h2>🔐 Nepo Chat</h2>
-
-  <div class="section">
-    <h3>Sign In</h3>
-    <input type="email" id="loginEmail" placeholder="Email" />
-    <input type="password" id="loginPassword" placeholder="Password" />
-    <button id="loginBtn">Login</button>
-    <button id="createBtn">Create Account</button>
-    
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <div style="margin-top: 10px;">Signing in...</div>
+  <div class="login-card">
+    <h2>🔐 Nepo Chat</h2>
+    <div class="section">
+      <h3>Sign In</h3>
+      <input type="email" id="loginEmail" placeholder="Email" />
+      <input type="password" id="loginPassword" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+      <button id="createBtn">Create Account</button>
     </div>
+    <p id="status"></p>
   </div>
 
-  <p id="status"></p>
-
-  <div class="demo-accounts">
-    <div class="demo-title">Demo Accounts (Click to fill):</div>
-    <div onclick="fillDemoAccount('test@nepochat.com', 'test123')">📧 test@nepochat.com | 🔑 test123</div>
-    <div onclick="fillDemoAccount('user@nepochat.com', 'user123')">📧 user@nepochat.com | 🔑 user123</div>
-    <div onclick="fillDemoAccount('demo@nepochat.com', 'demo123')">📧 demo@nepochat.com | 🔑 demo123</div>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay">
+    <div class="glow-ring"></div>
+    <div class="loading-text">Signing in to Nepo Chat...</div>
   </div>
 
+  <!-- Suspend Modal -->
   <div id="suspendModal">
     <p id="suspendMessage"></p>
     <div>
@@ -131,10 +237,10 @@
     </div>
   </div>
 
-  <!-- Firebase Modular SDK (v12) -->
+  <!-- Firebase Login System -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -152,51 +258,46 @@
     const auth = getAuth(app);
     const db = getDatabase(app);
     const status = document.getElementById("status");
-    const loading = document.getElementById("loading");
+    const overlay = document.getElementById("loadingOverlay");
 
-    // 🔄 REMOVED AUTO-LOGIN - User must manually login every time
+    function showLoading() {
+      overlay.style.display = "flex";
+    }
 
-    // Login function
+    function hideLoading() {
+      overlay.style.display = "none";
+    }
+
     document.getElementById("loginBtn").onclick = async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value.trim();
 
       if (!email || !password) {
         status.textContent = "❌ Enter email and password";
         return;
       }
 
-      // Show loading
-      document.getElementById("loginBtn").disabled = true;
-      document.getElementById("createBtn").disabled = true;
-      loading.style.display = "block";
-      status.textContent = "";
-
+      showLoading();
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         const uid = user.uid;
 
-        // Check if user is banned
         const bannedSnap = await get(ref(db, `bannedUsers/${uid}`));
         if (bannedSnap.exists()) {
-          document.getElementById("suspendMessage").textContent =
-            `❌ Your account "${email}" has been banned by moderators.`;
-          document.getElementById("suspendModal").style.display = "flex";
-          await auth.signOut();
-          resetUI();
+          suspendMessage.textContent = `❌ Your account "${email}" has been banned.`;
+          suspendModal.style.display = "flex";
+          await signOut(auth);
+          hideLoading();
           return;
         }
 
-        // Get user data from database
         const userRef = ref(db, "users/" + uid);
         const snap = await get(userRef);
-        
         if (!snap.exists()) {
-          // Create user profile if it doesn't exist
           await set(userRef, {
-            uid: uid,
-            email: email,
+            uid,
+            email,
             displayName: email.split('@')[0],
             balance: 1000,
             online: true,
@@ -205,77 +306,50 @@
             verified: false
           });
         } else {
-          // Update online status
           await set(ref(db, `users/${uid}/online`), true);
           await set(ref(db, `users/${uid}/lastSeen`), Date.now());
         }
 
-        const userData = snap.val() || {};
-        
-        // Store user session
         localStorage.setItem("nepo_user_id", uid);
         localStorage.setItem("nepo_user_email", email);
-        localStorage.setItem("nepo_profile_name", userData.displayName || email.split('@')[0]);
+        localStorage.setItem("nepo_profile_name", email.split('@')[0]);
 
+        status.style.color = "#00ff9d";
         status.textContent = "✅ Login successful! Redirecting...";
-        
-        // Redirect to home page
         setTimeout(() => {
           window.location.href = "home.html";
         }, 1000);
-
       } catch (err) {
         console.error("Login error:", err);
-        
-        if (err.code === "auth/user-disabled") {
-          document.getElementById("suspendMessage").textContent =
-            `❌ Your account "${email}" has been suspended by the PySecurity Team.`;
-          document.getElementById("suspendModal").style.display = "flex";
-        } else if (err.code === "auth/user-not-found") {
-          status.textContent = "❌ Account not found. Please create an account first.";
-        } else if (err.code === "auth/wrong-password") {
-          status.textContent = "❌ Incorrect password. Please try again.";
-        } else if (err.code === "auth/invalid-email") {
-          status.textContent = "❌ Invalid email address.";
-        } else if (err.code === "auth/too-many-requests") {
-          status.textContent = "❌ Too many failed attempts. Please try again later.";
-        } else {
-          status.textContent = "❌ Login failed: " + err.message;
-        }
-        resetUI();
+        hideLoading();
+        if (err.code === "auth/user-not-found") status.textContent = "❌ Account not found.";
+        else if (err.code === "auth/wrong-password") status.textContent = "❌ Incorrect password.";
+        else if (err.code === "auth/invalid-email") status.textContent = "❌ Invalid email.";
+        else status.textContent = "❌ " + err.message;
       }
     };
 
-    // Create account function
     document.getElementById("createBtn").onclick = async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
-
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value.trim();
       if (!email || !password) {
-        status.textContent = "❌ Enter email and password to create account";
+        status.textContent = "❌ Enter email and password";
         return;
       }
-
       if (password.length < 6) {
-        status.textContent = "❌ Password must be at least 6 characters";
+        status.textContent = "❌ Password too short";
         return;
       }
 
-      // Show loading
-      document.getElementById("loginBtn").disabled = true;
-      document.getElementById("createBtn").disabled = true;
-      loading.style.display = "block";
-      status.textContent = "";
-
+      showLoading();
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         const uid = user.uid;
 
-        // Create user profile in database
         await set(ref(db, "users/" + uid), {
-          uid: uid,
-          email: email,
+          uid,
+          email,
           displayName: email.split('@')[0],
           balance: 1000,
           online: true,
@@ -284,74 +358,28 @@
           verified: false
         });
 
-        // Store user session
         localStorage.setItem("nepo_user_id", uid);
         localStorage.setItem("nepo_user_email", email);
         localStorage.setItem("nepo_profile_name", email.split('@')[0]);
 
-        status.textContent = "✅ Account created successfully! Redirecting...";
-        
-        // Redirect to home page
+        status.style.color = "#00ff9d";
+        status.textContent = "✅ Account created! Redirecting...";
         setTimeout(() => {
           window.location.href = "home.html";
         }, 1000);
-
       } catch (err) {
-        console.error("Create account error:", err);
-        
-        if (err.code === "auth/email-already-in-use") {
-          status.textContent = "❌ Email already in use. Please login instead.";
-        } else if (err.code === "auth/invalid-email") {
-          status.textContent = "❌ Invalid email address.";
-        } else if (err.code === "auth/weak-password") {
-          status.textContent = "❌ Password is too weak.";
-        } else {
-          status.textContent = "❌ Account creation failed: " + err.message;
-        }
-        resetUI();
+        console.error("Create error:", err);
+        hideLoading();
+        if (err.code === "auth/email-already-in-use") status.textContent = "❌ Email already in use.";
+        else status.textContent = "❌ " + err.message;
       }
     };
 
-    // Modal buttons
-    document.getElementById("okBtn").onclick = () => {
-      document.getElementById("suspendModal").style.display = "none";
-      resetUI();
-    };
+    okBtn.onclick = () => suspendModal.style.display = "none";
+    helpBtn.onclick = () => alert("⚠️ Contact support for help.");
 
-    document.getElementById("helpBtn").onclick = () => {
-      alert("⚠️ For account assistance, please contact support.");
-    };
-
-    // Enter key support
-    document.getElementById("loginPassword").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        document.getElementById("loginBtn").click();
-      }
-    });
-
-    // Fill demo account function
-    window.fillDemoAccount = (email, password) => {
-      document.getElementById("loginEmail").value = email;
-      document.getElementById("loginPassword").value = password;
-      status.textContent = "💡 Demo account filled! Click Login to continue.";
-    };
-
-    function resetUI() {
-      document.getElementById("loginBtn").disabled = false;
-      document.getElementById("createBtn").disabled = false;
-      loading.style.display = "none";
-    }
-
-    // Auto-focus on email field
-    document.getElementById("loginEmail").focus();
-
-    // Clear any existing sessions on page load
-    localStorage.removeItem("nepo_user_id");
-    localStorage.removeItem("nepo_user_email");
-    localStorage.removeItem("nepo_profile_name");
-
-    console.log("🔐 Nepo Chat Login Page Loaded - Manual Login Required");
-
+    localStorage.clear();
+    console.log("🔐 Nepo Chat Login Loaded");
   </script>
 </body>
 </html>
